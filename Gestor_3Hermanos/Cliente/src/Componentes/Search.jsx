@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import Icon from "./Icon";
-import searchicon from './icons/search.png'
+import searchIcon from '../Componentes/Iconos/buscar.png'
 
 const SearchContainer = styled.div`
   display: flex;
@@ -22,17 +22,17 @@ const SearchInput = styled.input.attrs({ type: "search" })`
   font-size: 16px;
 `;
 
-
-const SearchBar = () => {
-
-    return (
-        <SearchContainer>
-            <Icon src={searchicon} />
-            <SearchInput placeholder='Buscar...'></SearchInput>
-        </SearchContainer>
-
-
-    );
+const SearchBar = ({ value, onChange }) => {
+  return (
+    <SearchContainer>
+      <Icon src={searchIcon} />
+      <SearchInput
+        placeholder='Buscar...'
+        value={value}
+        onChange={onChange}
+      />
+    </SearchContainer>
+  );
 };
 
 export default SearchBar;

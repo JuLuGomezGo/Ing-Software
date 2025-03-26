@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Icon from "./Icon";
 import logoIcon from '../Componentes/Iconos/LogoTexto.png';
-import homeicon from '../Componentes/Iconos/home.png';
 import logOutIcon from '../Componentes/Iconos/logOut.png';
 
 
@@ -39,9 +38,9 @@ const Nav = styled.nav`
 
       &:hover {
         color: #f9f4ee;
-        cursor: pointer;
         padding-bottom: 10px;
         border-bottom: 3px solid #f9f4ee;
+        cursor: pointer;
       }
     }
   }
@@ -62,12 +61,12 @@ gap: 10px;
 
 
 const Logo = styled.img`
-  height: 60px;
+  height: 80px;
 `;
 
 
 
-const Header = () => {
+const HeaderRepartidor = () => {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem("usuario"));
   const rolUsuario = usuario?.rol; // Obtiene el rol del usuario
@@ -84,12 +83,6 @@ const Header = () => {
       </Link>
       <Nav>
         <ul>
-          <li><Link to="/"><Icon src={homeicon} alt="Home" /></Link></li>
-          <li><Link to="/gestion-pedidos">Pedidos</Link></li>
-          <li><Link to="/caja">Caja</Link></li>
-          <li><Link to="/inventario">Inventario</Link></li>
-          {/* Mostrar "Usuarios" solo si el rol NO es "Empleado" */}
-          {rolUsuario !== "Empleado" && <li><Link to="/gestion-usuarios">Usuarios</Link></li>}
           <li>
             <LogOutBtn onClick={handleLogout}>
               <Icon src={logOutIcon} alt="Logout" />Cerrar Sesión
@@ -102,4 +95,4 @@ const Header = () => {
 };
 
 
-export default Header;
+export default HeaderRepartidor;

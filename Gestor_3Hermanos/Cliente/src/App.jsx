@@ -1,62 +1,69 @@
-
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-// Cliente/src/App.jsx
 import { useState, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+
+
 // Páginas
-import LoginGE from './Paginas/LoginGE.jsx';
-import PedidosRepartidor from './Paginas/PedidosRepartidor.jsx';
-import GestionUsuarios from './Paginas/GestionUsuarios.jsx';
-import LoginR from './Paginas/LoginR.jsx';
+import LoginGE from './Paginas/LoginGE';
+import Home from './Paginas/Home';
+import Inventario from './Paginas/Inventario';
+import GestionPedidos from './Paginas/GestionPedidos';
+import Caja from './Paginas/Caja';
+import GestionUsuarios from './Paginas/GestionUsuarios';
+
+import PedidosRepartidor from './Paginas/PedidosRepartidor';
+import MainContainer from './Componentes/MainContainer';
+
+import Error404 from './Paginas/Error404';  // Nueva página de error
+
 
 function App() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   const usuarioLogueado = localStorage.getItem("usuario");
-
-  // Llamada al backend al cargar la app (test)
-  useEffect(() => {
-    fetch('http://localhost:3000/api/test') //  ajustá el puerto si tu backend usa 3001
-      .then((response) => response.json())
-      .then((data) => {
-        setData(data.message);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error al conectar con el backend:', error);
-        setLoading(false);
-      });
-  }, []);
+  const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
+  const rolUsuario = usuario?.rol; // Extrae el rol correctamente
 
   return (
-    <div>
-      <h1>GESTOR 3 HERMANOS</h1>
-      
-
+    <MainContainer>
       <BrowserRouter>
         <Routes>
-          {/* Redirección automática al login o dashboard */}
+
+          {/* Redirección según usuario logueado */}
           <Route path="/" element={
-            usuarioLogueado ? <Navigate to="/gestion-usuarios" /> : <Navigate to="/login" />
+            !usuarioLogueado ? <Navigate to="/login" /> :
+              rolUsuario === "Repartidor" ? <Navigate to="/pedidos" /> :
+                <Navigate to="/home" />
           } />
 
+          {/* Rutas de Login */}
           <Route path="/login" element={<LoginGE />} />
-          <Route path="/login-repartidor" element={<LoginR />} />
 
-          {/* Rutas protegidas */}
-          <Route path="/pedidos" element={
-            usuarioLogueado ? <PedidosRepartidor /> : <Navigate to="/login-repartidor" />
-          } />
-          <Route path="/gestion-usuarios" element={
-            usuarioLogueado ? <GestionUsuarios /> : <Navigate to="/login" />
-          } />
+          {/* Rutas accesibles SOLO para Gerente y Empleado */}
+          {usuarioLogueado && rolUsuario !== "Repartidor" && (
+            <>
+              <Route path="/home" element={<Home />} />
+              <Route path="/inventario" element={<Inventario />} />
+              <Route path="/caja" element={<Caja />} />
+              <Route path="/gestion-pedidos" element={<GestionPedidos />} />
+            </>
+          )}
+
+          {/* Ruta accesible SOLO para el Gerente */}
+          {usuarioLogueado && rolUsuario === "Gerente" && (
+            <Route path="/gestion-usuarios" element={<GestionUsuarios />} />
+          )}
+
+          {/* Rutas accesibles SOLO para el Repartidor */}
+          {usuarioLogueado && rolUsuario === "Repartidor" && (
+            <Route path="/pedidos" element={<PedidosRepartidor />} />
+          )}
+
+          {/* Página de error 404 */}
+          <Route path="*" element={<Error404 />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </MainContainer>
+
   );
 }
 

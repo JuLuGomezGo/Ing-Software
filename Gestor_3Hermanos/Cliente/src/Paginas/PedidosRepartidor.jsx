@@ -1,11 +1,15 @@
+
 // src/Paginas/PedidosRepartidor.jsx
 import React, { useState } from "react";
-import PedidosRepartidorC from "../Componentes/PedidosRepartidorC.jsx";
+import PedidosRepartidorC from "../Componentes/PedidosRepartidorC";
 import "./PedidosRepartidor.css";
 
-// Importa tu nueva imagen (ajusta la ruta si es distinta)
-import LogoSinTexto from "../Imagenes/Logosintexto.jpg";
+import HeaderRepartidor from "../Componentes/HeaderRepartidor";
+import SearchBar from '../Componentes/Search'
 
+// Importa tu nueva imagen (ajusta la ruta si es distinta)
+import LogoSinTexto from "../Componentes/Iconos/Logo.png";
+import MainContainer from "../Componentes/MainContainer";
 function PedidosRepartidor() {
   const [busqueda, setBusqueda] = useState("");
 
@@ -46,32 +50,23 @@ function PedidosRepartidor() {
   );
 
   return (
-    <div className="pedidos-page">
-      {/* Franja café con la imagen centrada */}
-      <div className="pedidos-header">
-        <img src={LogoSinTexto} alt="Logo sin texto" className="header-logo" />
-      </div>
+    <MainContainer>
+      <HeaderRepartidor />
 
       <div className="pedidos-content">
         <div className="search-container">
-          <div className="search-box">
-            {/* Puedes usar un ícono Unicode o una imagen, por ejemplo */}
-            <span className="search-icon">&#x1F50E;</span>
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="search-input"
-            />
-          </div>
+
+          <SearchBar value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}>
+          </SearchBar>
+
         </div>
 
         <div className="pedidos-container">
           <PedidosRepartidorC pedidos={pedidosFiltrados} />
         </div>
       </div>
-    </div>
+    </MainContainer>
   );
 }
 

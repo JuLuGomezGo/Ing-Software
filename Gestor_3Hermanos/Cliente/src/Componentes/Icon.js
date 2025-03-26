@@ -1,4 +1,5 @@
-import styled from "styled-components";
+import styled from 'styled-components';
+
 
 const Icon = styled.img`
 width: 1.3rem;
