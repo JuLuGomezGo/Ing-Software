@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener pedidos', detalles: error.message });
   }
 });
-
+ 
 // GET - Obtener pedido por ID
 router.get('/:id', async (req, res) => {
   try {

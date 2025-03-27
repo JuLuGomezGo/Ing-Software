@@ -1,67 +1,56 @@
-
-// src/Paginas/PedidosRepartidor.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PedidosRepartidorC from "../Componentes/PedidosRepartidorC";
-import "./PedidosRepartidor.css";
-
+import "./PedidosRepartidor.css"; // Importamos los estilos
 import HeaderRepartidor from "../Componentes/HeaderRepartidor";
-import SearchBar from '../Componentes/Search'
-
-// Importa tu nueva imagen (ajusta la ruta si es distinta)
-import LogoSinTexto from "../Componentes/Iconos/Logo.png";
+import SearchBar from "../Componentes/Search";
 import MainContainer from "../Componentes/MainContainer";
+
 function PedidosRepartidor() {
   const [busqueda, setBusqueda] = useState("");
+  const [pedidos, setPedidos] = useState([]);
 
-  // Ejemplo de pedidos
-  const [pedidos, setPedidos] = useState([
-    {
-      id: 13,
-      direccion: "Mexico Sur #177 Col. Atenas",
-      total: 150,
-      nombreCliente: "Alejandro",
-      estado: "Listo p Entrega",
-    },
-    {
-      id: 5,
-      direccion: "Camilo Torres #117 Col. 2 de Agosto",
-      total: 100,
-      nombreCliente: "Juan Luis",
-      estado: "En Reparto",
-    },
-    {
-      id: 10,
-      direccion: "Av Siempreviva #742",
-      total: 300,
-      nombreCliente: "Homer",
-      estado: "En Reparto",
-    },
-    {
-      id: 4,
-      direccion: "Escobedo #177 Col. Tepeyac",
-      total: 150,
-      nombreCliente: "Juan Daniel",
-      estado: "En Reparto",
-    },
-  ]);
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      try {
+        // Ajusta la URL según tu configuración (puerto, dominio, etc.)
+        const response = await fetch("http://localhost:3000/api/pedidos");
+        if (!response.ok) {
+          throw new Error("Error al obtener pedidos");
+        }
+        const data = await response.json();
+        setPedidos(data);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
+    };
 
-  const pedidosFiltrados = pedidos.filter((pedido) =>
-    pedido.direccion.toLowerCase().includes(busqueda.toLowerCase())
+    fetchPedidos();
+  }, []);
+
+  // Mapeamos la estructura del backend a la que usará el componente PedidosRepartidorC
+  const pedidosMapeados = pedidos.map((p) => ({
+    id: p.pedidoId,
+    direccion: p.direccionEntrega,
+    total: p.total,
+    nombreCliente: p.cliente,
+    estado: p.estado,
+  }));
+
+  // Filtra los pedidos por la dirección
+  const pedidosFiltrados = pedidosMapeados.filter((pedido) =>
+    pedido.direccion?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <MainContainer>
       <HeaderRepartidor />
-
       <div className="pedidos-content">
         <div className="search-container">
-
-          <SearchBar value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}>
-          </SearchBar>
-
+          <SearchBar
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
         </div>
-
         <div className="pedidos-container">
           <PedidosRepartidorC pedidos={pedidosFiltrados} />
         </div>
