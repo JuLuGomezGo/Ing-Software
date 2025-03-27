@@ -1,3 +1,5 @@
+
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -63,6 +65,7 @@ const LoginForm = styled.div`
   }
 `;
 
+
 const Title = styled.h2`
   color: #5d4a36;
   font-size: 2rem;
@@ -102,12 +105,6 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    // Verificar que se hayan ingresado correo y contraseña
-    if (!correo.trim() || !contraseña.trim()) {
-      setError('Debe ingresar correo y contraseña');
-      return;
-    }
-
     try {
       const response = await fetch('http://localhost:3000/api/usuarios/login', {
         method: 'POST',
@@ -121,13 +118,13 @@ function Login() {
         setError('');
 
         // Redirigir según el rol
-        if (data.data.rol === 'Gerente') {
-          navigate('/gestion-usuarios');
-        } else if (data.data.rol === 'Repartidor') {
-          navigate('/pedidos');
+        if (data.data.rol === 'Repartidor') {
+          navigate('/pedidos'); // Ruta para el repartidor
         } else {
-          navigate('/home');
+          navigate('/Home'); // Ruta normal
         }
+
+
       } else {
         setError(data.error);
       }
@@ -144,6 +141,7 @@ function Login() {
         </Sidebar>
         <LoginForm>
           <Title>Inicio de Sesión</Title>
+
           <InputGroup>
             <Label>Correo:</Label>
             <TextBox
@@ -153,6 +151,7 @@ function Login() {
               onChange={(e) => setCorreo(e.target.value)}
             />
           </InputGroup>
+
           <InputGroup>
             <Label>Contraseña:</Label>
             <TextBox
@@ -162,7 +161,9 @@ function Login() {
               onChange={(e) => setContraseña(e.target.value)}
             />
           </InputGroup>
+
           {error && <ErrorMessage>{error}</ErrorMessage>}
+
           <Button onClick={handleLogin}>Ingresar</Button>
         </LoginForm>
       </Container>
