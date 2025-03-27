@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 import { generarId } from './Contador-Model.js';
 
 const cajaSchema = new mongoose.Schema({
+  cajaId: {
+    type: Number,
+    unique: true
+  },
   monto: {
     type: Number,
     required: [true, 'El monto es requerido'],
@@ -71,47 +75,29 @@ const usuarioSchema = new mongoose.Schema({
 
 // Generar ID único antes de guardar
 usuarioSchema.pre('save', async function(next) {
-  if (!this.usuarioId) {
-    this.usuarioId = await generarIdUnico();
-  }
-  next();
-});
-
-const generarIdUnico = async () => {
-  let id;
-  let contador = 0;
-  
-  do {
-    id = Math.floor(1000 + Math.random() * 9000);
-    contador++;
-    
-    if (contador > 100) {
-      throw new Error('No se pudo generar un ID único después de 100 intentos');
+  try {
+    if (!this.usuarioId) {
+      this.usuarioId = await generarId('Usuario');
     }
-    
-  } while (await mongoose.model('Usuario').exists({ usuarioId: id }));
 
-  return id;
-};
+    for (const movimiento of this.caja) {
+      if (!movimiento.cajaId) {
+        movimiento.cajaId = await generarId('Caja');
+      }
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // // Ocultar contraseña en las respuestas
-// usuarioSchema.methods.toJSON = function() {
-//   const usuario = this.toObject();
-//   delete usuario.contraseña;
-//   return usuario;
-// };
-
-
-
-
-/////////////////////////////////
-//Implementacion del incrementador en usuarioID
-usuarioSchema.pre('save', async function(next) {
-  if (!this.usuarioId) {
-    this.usuarioId = await generarId('Usuario');
-  }
-  next();
-});
+usuarioSchema.methods.toJSON = function() {
+  const usuario = this.toObject();
+  delete usuario.contraseña;
+  return usuario;
+};
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
 
