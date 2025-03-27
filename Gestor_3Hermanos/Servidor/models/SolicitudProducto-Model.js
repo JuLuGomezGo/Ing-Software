@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { generarId } from './Contador-Model.js';
 
 const solicitudSchema = new mongoose.Schema({
   solicitudId: { type: Number, required: true, unique: true },
@@ -10,9 +9,28 @@ const solicitudSchema = new mongoose.Schema({
   cantidad: { type: Number, required: true }
 });
 
+const generarIdUnico = async (campo) => {
+  let id;
+  let contador = 0;
+  let existe;
+
+  do {
+    id = Math.floor(1000 + Math.random() * 9000);
+    contador++;
+
+    if (contador > 100) {
+      throw new Error('No se pudo generar un ID único después de 100 intentos');
+    }
+
+    existe = await mongoose.model('SolicitudProducto').exists({ [campo]: id });
+  } while (existe);
+
+  return id;
+};
+
 solicitudSchema.pre('save', async function(next) {
   if (!this.solicitudId) {
-    this.solicitudId = await generarId('SolicitudProducto');
+    this.solicitudId = await generarIdUnico('solicitudId');
   }
   next();
 });

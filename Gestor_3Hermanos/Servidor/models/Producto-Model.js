@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { generarId } from './Contador-Model.js';
 // Registrar modelos auxiliares primero
 const generarIdUnico = async (modelName, campoId) => {
   let id;

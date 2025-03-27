@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { generarId } from './Contador-Model.js';
 
 const cajaSchema = new mongoose.Schema({
   cajaId: {
@@ -35,7 +34,7 @@ const usuarioSchema = new mongoose.Schema({
     type: Number,
     unique: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^\d{4}$/.test(v.toString());
       },
       message: props => `${props.value} no es un ID válido. Debe ser un número de 4 dígitos`
@@ -68,21 +67,39 @@ const usuarioSchema = new mongoose.Schema({
     ]
   },
   caja: [cajaSchema]
-}, { 
+}, {
   collection: 'usuarios',
   timestamps: true
 });
+const generarIdUnico = async (campo) => {
+  let id;
+  let contador = 0;
+  let existe;
 
-// Generar ID único antes de guardar
-usuarioSchema.pre('save', async function(next) {
+  do {
+    id = Math.floor(1000 + Math.random() * 9000);
+    contador++;
+
+    if (contador > 100) {
+      throw new Error('No se pudo generar un ID único después de 100 intentos');
+    }
+
+    existe = await mongoose.model('Usuario').exists({ [campo]: id });
+  } while (existe);
+
+  return id;
+};
+
+// Generar IDs antes de guardar
+usuarioSchema.pre('save', async function (next) {
   try {
     if (!this.usuarioId) {
-      this.usuarioId = await generarId('Usuario');
+      this.usuarioId = await generarIdUnico('usuarioId');
     }
 
     for (const movimiento of this.caja) {
       if (!movimiento.cajaId) {
-        movimiento.cajaId = await generarId('Caja');
+        movimiento.cajaId = await generarIdUnico('caja.cajaId');
       }
     }
 
@@ -92,8 +109,9 @@ usuarioSchema.pre('save', async function(next) {
   }
 });
 
+
 // // Ocultar contraseña en las respuestas
-usuarioSchema.methods.toJSON = function() {
+usuarioSchema.methods.toJSON = function () {
   const usuario = this.toObject();
   delete usuario.contraseña;
   return usuario;
