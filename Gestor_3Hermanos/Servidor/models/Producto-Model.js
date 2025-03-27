@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-
+import { generarId } from './Contador-Model.js';
 // Registrar modelos auxiliares primero
 const generarIdUnico = async (modelName, campoId) => {
   let id;
@@ -105,6 +105,29 @@ productoSchema.pre('save', async function(next) {
     next();
   } catch (error) {
     next(error);
+  }
+});
+////////////////////////////////////////////////////////
+//Implementacion del contador.
+productoSchema.pre('save', async function(next) {
+  try {
+    if (!this.productoId) {
+      this.productoId = await generarId('Producto');
+    }
+
+    if (this.proveedor && !this.proveedor.proveedorId) {
+      this.proveedor.proveedorId = await generarId('Proveedor');
+    }
+
+    for (const historial of this.historialInventario) {
+      if (!historial.historialId) {
+        historial.historialId = await generarId('HistorialInventario');
+      }
+    }
+
+    next();
+  } catch (err) {
+    next(err);
   }
 });
 

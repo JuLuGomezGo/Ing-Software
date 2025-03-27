@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import { generarId } from './Contador-Model.js';
+
 const productoPedidoSchema = new mongoose.Schema({
   productoId: { type: Number, required: true },
   nombre: { type: String, required: true },
@@ -16,5 +18,12 @@ const pedidoSchema = new mongoose.Schema({
   usuarioId: { type: Number, ref: 'Usuario', required: true },
   productos: [productoPedidoSchema]
 });
+pedidoSchema.pre('save', async function(next) {
+  if (!this.pedidoId) {
+    this.pedidoId = await generarId('Pedido');
+  }
+  next();
+});
+
 
 export default mongoose.model('Pedido', pedidoSchema);

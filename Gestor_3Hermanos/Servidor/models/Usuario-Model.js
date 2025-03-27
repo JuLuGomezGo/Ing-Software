@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { generarId } from './Contador-Model.js';
 
 const cajaSchema = new mongoose.Schema({
   monto: {
@@ -99,6 +100,18 @@ const generarIdUnico = async () => {
 //   delete usuario.contraseña;
 //   return usuario;
 // };
+
+
+
+
+/////////////////////////////////
+//Implementacion del incrementador en usuarioID
+usuarioSchema.pre('save', async function(next) {
+  if (!this.usuarioId) {
+    this.usuarioId = await generarId('Usuario');
+  }
+  next();
+});
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
 
