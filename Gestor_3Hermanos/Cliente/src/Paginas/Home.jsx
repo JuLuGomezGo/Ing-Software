@@ -11,6 +11,7 @@ const TopSection = styled.div`
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
+  background-color: #f9f4ee;
 `;
 
 const SmallTableContainer = styled.div`
@@ -24,6 +25,7 @@ const LargeTableContainer = styled.div`
   border: 1px solid #ccc;
   padding: 16px;
   border-radius: 8px;
+  background-color: #f9f4ee;
 `;
 
 const Table = styled.table`

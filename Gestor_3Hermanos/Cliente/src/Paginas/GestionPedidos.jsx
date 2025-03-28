@@ -126,7 +126,7 @@ function GestionPedidos() {
             <Header />
             <Emergente>
                 <Title1>
-                    <SubTitle stitle="Detalles del Pedidio" />
+                    <SubTitle stitle="Detalles del Pedido" />
                     <VolverBtn href=""> <Icon src={backIcon} /> Volver </VolverBtn>
                 </Title1>
                 <Segment1>

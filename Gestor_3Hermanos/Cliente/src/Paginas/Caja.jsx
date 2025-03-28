@@ -9,6 +9,10 @@ import { Table, Th, Td } from "../Componentes/Table";
 import DropBox from "../Componentes/DropBox";
 import { TextBox } from "../Componentes/TextComponent";
 import { DateBox, TimeBox } from '../Componentes/Date-TimePicker';
+import SubTitulo from "../Componentes/SubTitle";
+import Icon from "../Componentes/Icon";
+
+import backIcon from "../Componentes/Iconos/back.png";
 
 
 
@@ -91,27 +95,79 @@ const Cont_inputs = styled.div`
   gap: 0.5rem;
 `;
 
+// 💡 **Estilos del modal**
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ModalContent = styled.div`
+  background: #f9f4ee;
+  Border: 4px dashed #b3815d;
+  padding: 1.5rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-bottom: 1px solid #b3815d;
+  padding-bottom: 0.5rem;
+`;
+const DateContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+const VolverBtn = styled.a`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: end;
+    margin: fit-content;
+    padding: 10px;
+    text-decoration: none;
+    color: #8B572A;
+
+    cursor: pointer;
+`;
+const RadioGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
 const Caja = () => {
 
-    
+
     const [movements, setMovements] = useState([]);
     const [formData, setFormData] = useState({
         amount: "",
         reason: "Cobro Pedido",
         reference: "",
     });
-
+    
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
-
+    
     const handleRegister = () => {
         if (!formData.amount || !formData.reference) {
             alert("Por favor completa todos los campos.");
             return;
         }
-
+        
         const newMovement = {
             user: "Usuario01",
             amount: formData.amount,
@@ -122,13 +178,35 @@ const Caja = () => {
                 timeStyle: "short",
             }),
         };
-
+        
         setMovements([...movements, newMovement]);
         setFormData({ amount: "", reason: "Cobro Pedido", reference: "" });
     };
+    
+    // --------------------------------------------------
+    // Manejo del Modal (Reporte)
+    // --------------------------------------------------
+    // Estados para la fecha y hora actual
+    const [date, setDate] = useState("");
+    const [time, setTime] = useState("");
+    useEffect(() => {
+        const now = new Date();
+        
+        // Formato correcto para el input[type="date"] -> YYYY-MM-DD
+        const formattedDate = now.toISOString().split("T")[0];
+        
+        // Formato correcto para el input[type="time"] -> HH:MM
+        const formattedTime = now.toTimeString().slice(0, 5); // Extrae "HH:MM"
+        
+        setDate(formattedDate);
+        setTime(formattedTime);
+    }, []);
 
-
-
+    // Estado para mostrar u ocultar el modal
+    const [showModal, setShowModal] = useState(false);
+    const handleCloseModal = () => {
+        setShowModal(false);
+    };
 
     return (
         <MainContainer>
@@ -139,17 +217,44 @@ const Caja = () => {
 
                 <FlexRow>
 
-                    <Button>📄 Generar Reporte</Button>
+                    <Button onClick={() => setShowModal(true)}>📄 Generar Reporte</Button>
+
+                    {/*  **Ventana Emergente para generar Reporte** */}
+                    {showModal && (
+                        <ModalOverlay>
+                            <ModalContent>
+                                <Section>
+                                    <VolverBtn > <Icon onClick={handleCloseModal} src={backIcon} />  </VolverBtn>
+                                    <SubTitulo stitle=" 📅 Por Periodo de Tiempo" />
+                                    <DateContainer>
+                                        <Label>Del: <DateBox /></Label>
+                                        <Label>Al: <DateBox /></Label>
+                                    </DateContainer>
+                                </Section>
+
+                                <Section>
+                                    <SubTitulo stitle="📆 Por Día" />
+                                    <Label>Fecha: <DateBox /></Label>
+                                </Section>
+
+                                <Button>📄 Generar</Button>
+                            </ModalContent>
+                        </ModalOverlay>
+                    )}
+
+
+
+
 
                     <Cont_lbl>
 
                         <Label>
                             📅 Fecha:
-                            <DateBox />
+                            <DateBox value={date} onChange={(e) => setDate(e.target.value)}  readOnly />
                         </Label>
                         <Label>
                             ⏰ Hora:
-                            <TimeBox />
+                            <TimeBox value={time} onChange={(e) => setTime(e.target.value)} readOnly />
                         </Label>
                     </Cont_lbl>
                 </FlexRow>
