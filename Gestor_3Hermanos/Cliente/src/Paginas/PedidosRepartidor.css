@@ -1,102 +1,234 @@
-/* src/Paginas/LoginR.css */
 
-/* Ocupa toda la pantalla y aplica el fondo crema */
-.loginr-page {
-  min-height: 100vh;
-  /* Ocupa toda la ventana */
-  background-color: #fef3e7;
+
+
+/* ====== LISTA DE PEDIDOS ====== */
+.pedidos-list {
+  list-style: none;
+  padding: 1rem;
+  margin: 0;
+}
+
+/* Tarjeta (li) */
+.pedido-item {
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  color: #000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+.pedido-item:hover {
+  transform: translateY(-2px);
+}
+
+/* ====== VISTA RESUMEN (cerrada) ====== */
+.summary-card {
+  background-color: #ffe5d5; /* Fondo durazno suave */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.summary-content {
   display: flex;
   flex-direction: column;
+  gap: 0.3rem;
 }
 
-/* Franja café superior con imagen centrada */
-.loginr-header {
-  background-color: #8b4513;
-  /* café */
-  padding: 1rem;
+.summary-footer {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
 }
 
-.loginr-img {
-  max-width: 200px;
-  height: auto;
-  object-fit: contain;
+.direccion {
+  font-weight: bold;
+  font-size: 1rem;
 }
-
-/* Contenedor principal (crema) para el formulario */
-.loginr-container {
-  background-color: #fef3e7;
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-  padding: 2rem 1rem;
-
-  /* Para que crezca y empuje el footer, si lo tuvieras */
-  flex: 1;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.loginr-title {
-  text-align: center;
-  margin: 0 0 1.5rem;
-  font-weight: normal;
+.pedido-id,
+.total {
+  font-size: 0.9rem;
   color: #333;
 }
+.cliente {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #000;
+}
+.estado {
+  font-size: 0.9rem;
+  color: #666;
+}
+.flecha {
+  font-size: 1rem;
+  color: #444;
+  cursor: pointer;
+}
 
-/* Formulario */
-.loginr-form {
+/* ====== VISTA DETALLE (abierta) ====== */
+.detail-card {
+  background-color: #fef7f0; /* Fondo más claro */
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.loginr-label {
-  font-size: 0.95rem;
-  color: #444;
+/* Encabezado: 2 columnas (izq: pedido, der: fecha) */
+.encabezado-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Para que la fecha quede un poco más arriba */
 }
-
-/* Inputs blancos con borde suave */
-.loginr-input {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
+.encabezado-izq .numero-pedido {
+  margin: 0;
   font-size: 1rem;
-  outline: none;
+}
+.encabezado-der .fecha-entrega {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: bold;
   color: #333;
 }
 
-.loginr-input::placeholder {
-  color: #999;
+/* Filas de detalle para dirección+icono, cliente+select */
+.fila-detalle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.direccion-detalle,
+.cliente-detalle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: bold;
 }
 
-.loginr-links {
-  text-align: right;
-}
-
-.loginr-olvido {
-  font-size: 0.85rem;
-  color: #555;
-  text-decoration: none;
-}
-
-.loginr-olvido:hover {
-  text-decoration: underline;
-}
-
-.loginr-button {
-  background-color: #8b4513;
-  /* café */
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
+/* Ícono del mapa */
+.map-icon {
+  margin-left: auto; /* Empuja el ícono a la derecha */
+  width: 24px;
+  height: 24px;
   cursor: pointer;
 }
 
-.loginr-button:hover {
+/* Select de estados */
+.estado-select {
+  margin-left: auto; /* Empuja el select a la derecha */
+  padding: 0.3rem;
+  border-radius: 4px;
+  cursor: pointer;
+  /* Opcional: quitar la flecha nativa en Chrome/Edge/Firefox
+     y personalizar con background-image si quieres
+     -webkit-appearance: none; 
+     -moz-appearance: none; 
+     background-image: url('/assets/Iconos/expandir.png'); 
+     background-repeat: no-repeat;
+     background-position: right 0.5rem center; */
+}
+
+/* Productos */
+.productos-bloque h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.productos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.productos-table th,
+.productos-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
+}
+.productos-table th {
+  background-color: #f9d6c5;
+}
+
+
+/* Radio buttons en vertical */
+.radio-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Sección de datos de transferencia */
+.datos-transferencia {
+  background-color: #ffe8d9;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.datos-transferencia label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+/* Botón "Finalizar Entrega" */
+.btn-finalizar {
+  background-color: #8b4513; /* Café */
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-finalizar:hover {
   background-color: #a25a1b;
+}
+
+
+/* Botón Cerrar */
+.detalle-botones {
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-cerrar {
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background-color: #ccc;
+  color: #333;
+}
+.btn-cerrar:hover {
+  background-color: #bbb;
+}
+
+/* ====== Responsive para pantallas pequeñas ====== */
+@media (max-width: 600px) {
+  .detail-card {
+    gap: 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .encabezado-detalle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .fila-detalle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .map-icon,
+  .estado-select {
+    margin-left: 0;
+    margin-top: 0.3rem;
+  }
 }
