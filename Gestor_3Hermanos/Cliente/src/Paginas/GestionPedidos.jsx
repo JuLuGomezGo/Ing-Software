@@ -25,7 +25,7 @@ const Emergente = styled.div`
     display: flex;
     flex-direction: column;
     align-items: left;
-    border: 3px solid #8B572A;
+    border: 3px dashed #8B572A;
     border-radius: 10px;
 `;
 
@@ -78,24 +78,45 @@ const Segment2 = styled.div`
     padding: 10px;
 `;
 
-const Container_direccion = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-`;
 
 const Container_Descripcion = styled.div`
-    display: flex;
+display: flex;
+flex-direction: column;
+align-items: start;
+justify-content: space-between;
+// align-items: center;
+// justify-content: space-between;
+padding: 10px;
+margin: 10px;
+// background-color: black;
+gap: 20px;
+
+`;
+
+
+const Container_direccion = styled.div`
+    display: grid;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    grid-template:  repeat(3, 1fr)  / repeat(2, auto);
+    grid-template-areas:
+        "cliente telefono"
+        "direccion "
+        "fecha hora";
+    justify-content: space-around;
+    gap: 1px; 
+    width: 100%;
     padding: 10px;
 `;
 
 const Label = styled.label`
     font-weight: bold;
+    width: 100%;
+    gridArea: ${props => props.gridArea};
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    
 `;
 
 
@@ -123,7 +144,11 @@ function GestionPedidos() {
                             </tr>
                         </thead>
                         <tbody>
+                            
                             <tr>
+                                
+                            <Th>Total</Th>
+                            <td>$ ---</td>
                             </tr>
                         </tbody>
 
@@ -134,18 +159,20 @@ function GestionPedidos() {
                 <Segment2>
 
                     <Container_Descripcion>
-                        <Label>Descripción:</Label>  <TextArea />
-                        <Button size="large" variant="primary" ><Icon src={nuevPedido} />Generar Pedido</Button>
+                        {/* <Label>Descripción:</Label>
+                        <TextArea /> */}
+                        <Button size="large" variant="secondary" ><Icon src={nuevPedido} />Generar Pedido</Button>
                     </Container_Descripcion>
 
                     <Title2>
-                        <SubTitle stitle="Detalles de Entrega"></SubTitle>
+                        <SubTitle stitle="Detalles de Entrega" />
 
                         <Container_direccion>
-                            <Label>Cliente:  <TextBox /></Label>
-                            <Label>Telefono:  <TextBox placeholder="XXX-XXXX-XXX" /></Label>
-                            <Label>Direccion:  <TextBox /></Label>
-                            <Label>Fecha:  < DateBox /></Label><Label>Hora:  <TimeBox /></Label>
+                            <Label $gridArea="cliente">Cliente:  <TextBox /></Label>
+                            <Label $gridArea="telefono">Telefono:  <TextBox placeholder="XXX-XXXX-XXX" /></Label>
+                            <Label $gridArea="direccion">Direccion:  <TextBox /></Label>
+                            <Label $gridArea="fecha">Fecha:  < DateBox /></Label>
+                            <Label $gridArea="hora">Hora:  <TimeBox /></Label>
 
                         </Container_direccion>
 

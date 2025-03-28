@@ -6,7 +6,7 @@ const TextBox = styled.input`
   border-radius: 10px;
   font-size: 16px;
   // width: 100%;
-  background-color: #f9f4ee;
+  background-color: #ecd8bf;
   color: black;
 
   &:focus {

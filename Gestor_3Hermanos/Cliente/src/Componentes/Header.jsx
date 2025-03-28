@@ -31,7 +31,7 @@ const Nav = styled.nav`
     li a {
 
       text-decoration: none;
-      color: #000;
+      color: white;
       font-weight: bold;
       transition: color 0.3s;
       
@@ -54,7 +54,7 @@ color: #f9f4ee;
 padding: 10px 20px;
 border-radius: 5px;
 text-decoration: none;
-font-weight: bold;
+// font-weight: bold;
 display: flex;
 align-items: center;
 gap: 10px;
@@ -62,7 +62,7 @@ gap: 10px;
 
 
 const Logo = styled.img`
-  height: 60px;
+  height: 100px;
 `;
 
 

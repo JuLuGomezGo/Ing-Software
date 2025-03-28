@@ -7,7 +7,9 @@ const DropBox = styled.select`
   border-radius: 10px;
   font-size: 16px;
   width: 50%;
-  background-color: #f9f4ee;
+  background-color: #ecd8bf;
   color: black;
-`
+`;
+
+
 export default DropBox;

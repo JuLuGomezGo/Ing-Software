@@ -13,6 +13,8 @@ const Button = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
+  width: fit-content;
+  height: fit-content;
 
   &:hover {
     background-color: ${({ variant }) =>
