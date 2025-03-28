@@ -1,93 +1,234 @@
-/* ====== ESTILOS GENERALES ====== */
 
+
+
+/* ====== LISTA DE PEDIDOS ====== */
 .pedidos-list {
   list-style: none;
   padding: 1rem;
   margin: 0;
 }
 
-body{
-  background-color: #ffe5d5;
-}
-
-/* ====== TARJETA DE PEDIDO ====== */
-
+/* Tarjeta (li) */
 .pedido-item {
-  background-color: #ffe5d5;  /* Fondo durazno suave */
   border-radius: 8px;
-  padding: 1rem;
   margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #000;  /* Texto negro */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);  /* Sombra suave */
+  color: #000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
-
-/* Animación ligera al pasar el mouse */
 .pedido-item:hover {
   transform: translateY(-2px);
 }
 
-/* ====== COLUMNAS DE INFORMACIÓN ====== */
+/* ====== VISTA RESUMEN (cerrada) ====== */
+.summary-card {
+  background-color: #ffe5d5; /* Fondo durazno suave */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
 
-.pedido-col-izq,
-.pedido-col-der {
+.summary-content {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
 
-/* ====== TEXTOS ====== */
+.summary-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
 
 .direccion {
   font-weight: bold;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
-
 .pedido-id,
 .total {
   font-size: 0.9rem;
   color: #333;
 }
-
 .cliente {
   font-weight: bold;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #000;
 }
-
 .estado {
   font-size: 0.9rem;
   color: #666;
 }
-
 .flecha {
   font-size: 1rem;
   color: #444;
+  cursor: pointer;
 }
 
-/* ====== RESPONSIVE: Teléfonos móviles ====== */
+/* ====== VISTA DETALLE (abierta) ====== */
+.detail-card {
+  background-color: #fef7f0; /* Fondo más claro */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
+/* Encabezado: 2 columnas (izq: pedido, der: fecha) */
+.encabezado-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Para que la fecha quede un poco más arriba */
+}
+.encabezado-izq .numero-pedido {
+  margin: 0;
+  font-size: 1rem;
+}
+.encabezado-der .fecha-entrega {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Filas de detalle para dirección+icono, cliente+select */
+.fila-detalle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.direccion-detalle,
+.cliente-detalle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* Ícono del mapa */
+.map-icon {
+  margin-left: auto; /* Empuja el ícono a la derecha */
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+/* Select de estados */
+.estado-select {
+  margin-left: auto; /* Empuja el select a la derecha */
+  padding: 0.3rem;
+  border-radius: 4px;
+  cursor: pointer;
+  /* Opcional: quitar la flecha nativa en Chrome/Edge/Firefox
+     y personalizar con background-image si quieres
+     -webkit-appearance: none; 
+     -moz-appearance: none; 
+     background-image: url('/assets/Iconos/expandir.png'); 
+     background-repeat: no-repeat;
+     background-position: right 0.5rem center; */
+}
+
+/* Productos */
+.productos-bloque h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.productos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.productos-table th,
+.productos-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
+}
+.productos-table th {
+  background-color: #f9d6c5;
+}
+
+
+/* Radio buttons en vertical */
+.radio-group-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Sección de datos de transferencia */
+.datos-transferencia {
+  background-color: #ffe8d9;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.datos-transferencia label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+/* Botón "Finalizar Entrega" */
+.btn-finalizar {
+  background-color: #8b4513; /* Café */
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-finalizar:hover {
+  background-color: #a25a1b;
+}
+
+
+/* Botón Cerrar */
+.detalle-botones {
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-cerrar {
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background-color: #ccc;
+  color: #333;
+}
+.btn-cerrar:hover {
+  background-color: #bbb;
+}
+
+/* ====== Responsive para pantallas pequeñas ====== */
 @media (max-width: 600px) {
-  .pedido-item {
+  .detail-card {
+    gap: 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .encabezado-detalle {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0.8rem;
+    gap: 0.3rem;
   }
 
-  .pedido-col-der {
+  .fila-detalle {
+    flex-direction: column;
     align-items: flex-start;
-    margin-top: 0.5rem;
   }
-
-  .direccion,
-  .pedido-id,
-  .total,
-  .cliente,
-  .estado,
-  .flecha {
-    font-size: 1rem;
+  .map-icon,
+  .estado-select {
+    margin-left: 0;
+    margin-top: 0.3rem;
   }
 }

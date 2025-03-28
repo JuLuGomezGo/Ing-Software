@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PedidosRepartidorC from "../Componentes/PedidosRepartidorC";
-import "./PedidosRepartidor.css"; // Importamos los estilos
+import "./PedidosRepartidor.css"; // Tus estilos globales o de la página
 import HeaderRepartidor from "../Componentes/HeaderRepartidor";
 import SearchBar from "../Componentes/Search";
 import MainContainer from "../Componentes/MainContainer";
@@ -12,7 +12,6 @@ function PedidosRepartidor() {
   useEffect(() => {
     const fetchPedidos = async () => {
       try {
-        // Ajusta la URL según tu configuración (puerto, dominio, etc.)
         const response = await fetch("http://localhost:3000/api/pedidos");
         if (!response.ok) {
           throw new Error("Error al obtener pedidos");
@@ -27,13 +26,16 @@ function PedidosRepartidor() {
     fetchPedidos();
   }, []);
 
-  // Mapeamos la estructura del backend a la que usará el componente PedidosRepartidorC
+  // Mapeamos la estructura del backend
   const pedidosMapeados = pedidos.map((p) => ({
     id: p.pedidoId,
     direccion: p.direccionEntrega,
     total: p.total,
     nombreCliente: p.cliente,
     estado: p.estado,
+    fecha: p.fecha,
+    productos: p.productos,
+    metodoPago: p.metodoPago,
   }));
 
   // Filtra los pedidos por la dirección
