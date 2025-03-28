@@ -1,7 +1,23 @@
-body{
+html, body {
   margin: 0;
   padding: 0;
   background-color: antiquewhite;
   min-height: 100%;
+  background-color: #ffe6f2 !important; /* Un rosado claro */
+  color: #000 !important;
+}
 
+/* Si tus contenedores tienen color de fondo, anúlalo o ponlo transparente */
+.MainContainer,
+.pedidos-content,
+.pedidos-container {
+  background-color: transparent !important;
+}
+
+/* Forzar en modo oscuro */
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background-color: #ffe6f2 !important;
+    color: #000 !important;
+  }
 }
