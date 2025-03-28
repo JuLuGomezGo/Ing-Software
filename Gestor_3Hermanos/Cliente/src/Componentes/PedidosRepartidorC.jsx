@@ -208,9 +208,8 @@ function PedidosRepartidorC({ pedidos = [] }) {
               </div>
 
               {/* MÉTODO DE PAGO */}
-              <div className="metodo-pago-bloque"> 
+              <div className="metodo-pago-bloque">
                 <h4>Método de Pago</h4>
-                <hr />
                 <div className="radio-group-vertical">
                   <label>
                     <input
