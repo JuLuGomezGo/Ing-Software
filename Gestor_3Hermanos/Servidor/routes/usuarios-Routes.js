@@ -139,6 +139,39 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Agregar movimiento de caja
+router.post('/:id/caja', async (req, res) => {
+  try {
+      const idUsuario = Number(req.params.id); // Convertir a número
+      const movimiento = req.body;
+
+      const usuario = await Usuario.findOneAndUpdate(
+          { usuarioId: req.params.id },
+          { $push: { caja: movimiento } },
+          { new: true, select: '-contraseña -__v' }
+      );
+
+      if (!usuario) {
+          return res.status(404).json({
+              success: false,
+              error: 'Usuario no encontrado'
+          });
+      }
+
+      res.json({
+          success: true,
+          data: movimiento
+      });
+
+  } catch (error) {
+      res.status(500).json({
+          success: false,
+          error: error.message
+      });
+  }
+});
+
+
 // Eliminar usuario
 router.delete('/:id', async (req, res) => {
   try {

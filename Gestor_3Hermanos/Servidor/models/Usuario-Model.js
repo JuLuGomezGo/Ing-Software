@@ -19,7 +19,7 @@ const cajaSchema = new mongoose.Schema({
     type: String,
     required: [true, 'El motivo es requerido'],
     enum: {
-      values: ['Apertura de caja', 'Pago de proveedor', 'Venta', 'Otro'],
+      values: ['Cobro Pedido', 'Pago de proveedor'],
       message: 'Motivo no válido'
     }
   },

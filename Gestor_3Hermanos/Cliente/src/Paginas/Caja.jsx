@@ -15,46 +15,6 @@ import Icon from "../Componentes/Icon";
 import backIcon from "../Componentes/Iconos/back.png";
 
 
-
-
-//                         <button
-//                             
-//                             className="w-full bg-[#D7A86E] text-white font-bold py-2 rounded-lg hover:bg-[#C48A5D]"
-//                         >
-//                             Registrar Movimiento
-//                         </button>
-//                     </div>
-
-//                     <table className="w-full text-left border-collapse">
-//                         <thead>
-//                             <tr className="bg-[#D7A86E] text-white">
-//                                 <th className="p-2">Usuario</th>
-//                                 <th className="p-2">Monto</th>
-//                                 <th className="p-2">Referencia</th>
-//                                 <th className="p-2">Motivo</th>
-//                                 <th className="p-2">Fecha y Hora</th>
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {movements.map((movement, index) => (
-//                                 <tr key={index} className="odd:bg-[#FAF3E0] even:bg-white">
-//                                     <td className="p-2">{movement.user}</td>
-//                                     <td className="p-2">${movement.amount}</td>
-//                                     <td className="p-2">{movement.reference}</td>
-//                                     <td className="p-2">{movement.reason}</td>
-//                                     <td className="p-2">{movement.dateTime}</td>
-//                                 </tr>
-//                             ))}
-//                         </tbody>
-//                     </table>
-//                 </div>
-//             </div>
-//         </MainContainer>
-//     );
-// };
-// export default Caja;
-
-
 const Container = styled.div`
   border: 2px solid #b3815d;
   padding: 0.5rem;
@@ -95,7 +55,7 @@ const Cont_inputs = styled.div`
   gap: 0.5rem;
 `;
 
-// 💡 **Estilos del modal**
+//  **Estilos del modal**
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -112,6 +72,7 @@ const ModalContent = styled.div`
   background: #f9f4ee;
   Border: 4px dashed #b3815d;
   padding: 1.5rem;
+  gap: 1rem;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -150,168 +111,234 @@ const RadioGroup = styled.div`
 const Caja = () => {
 
 
-    const [movements, setMovements] = useState([]);
-    const [formData, setFormData] = useState({
+  const [movements, setMovements] = useState([]);
+  const [formData, setFormData] = useState({
+    amount: "",
+    reason: "",
+    reference: "",
+    date: "",
+    time: "",
+    user: "",
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+
+  const handleRegister = async () => {
+    if (!formData.amount || !formData.reference || !formData.reason) {
+      alert("Por favor completa todos los campos.");
+      return;
+    }
+
+    const usuarioLogueado = localStorage.getItem("usuario");
+    const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
+    const idUsuario = usuario?.usuarioId;
+
+    if (!idUsuario) {
+      alert("No se encontró el usuario. Inicia sesión nuevamente.");
+      return;
+    }
+
+    const newMovement = {
+      monto: parseFloat(formData.amount),
+      referencia: formData.reference,
+      motivo: formData.reason,
+      fechaHora: new Date()
+    };
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/usuarios/${idUsuario}/caja`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newMovement),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al registrar el movimiento");
+      }
+
+      const data = await response.json();
+      console.log("Movimiento registrado con éxito:", data);
+
+      // Actualizar la lista de movimientos
+      setMovimientosCaja([...movimientosCaja, data]);
+
+      // Reiniciar el formulario
+      setFormData({
         amount: "",
-        reason: "Cobro Pedido",
+        reason: "",
         reference: "",
-    });
-    
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-    
-    const handleRegister = () => {
-        if (!formData.amount || !formData.reference) {
-            alert("Por favor completa todos los campos.");
-            return;
+        date: "",
+        time: ""
+      });
+
+    } catch (error) {
+      console.error("Error al registrar el movimiento:", error);
+      alert("Hubo un problema al registrar el movimiento.");
+    }
+  };
+  const [movimientosCaja, setMovimientosCaja] = useState([]);
+  useEffect(() => {
+    const fetchCajaMovimientos = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/usuarios");
+        if (!response.ok) throw new Error("Error al obtener usuarios");
+
+        const result = await response.json();
+        if (result.success) {
+          const allMovimientos = result.data.flatMap(usuario =>
+            usuario.caja?.map(mov => ({
+              ...mov,
+              usuario: usuario.nombre,
+              usuarioId: usuario.usuarioId
+            })) || []
+          );
+
+          allMovimientos.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+          setMovimientosCaja(allMovimientos);
         }
-        
-        const newMovement = {
-            user: "Usuario01",
-            amount: formData.amount,
-            reference: formData.reference,
-            reason: formData.reason,
-            dateTime: new Date().toLocaleString("es-MX", {
-                dateStyle: "short",
-                timeStyle: "short",
-            }),
-        };
-        
-        setMovements([...movements, newMovement]);
-        setFormData({ amount: "", reason: "Cobro Pedido", reference: "" });
+      } catch (error) {
+        console.error("Error:", error);
+      }
     };
-    
-    // --------------------------------------------------
-    // Manejo del Modal (Reporte)
-    // --------------------------------------------------
-    // Estados para la fecha y hora actual
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
-    useEffect(() => {
-        const now = new Date();
-        
-        // Formato correcto para el input[type="date"] -> YYYY-MM-DD
-        const formattedDate = now.toISOString().split("T")[0];
-        
-        // Formato correcto para el input[type="time"] -> HH:MM
-        const formattedTime = now.toTimeString().slice(0, 5); // Extrae "HH:MM"
-        
-        setDate(formattedDate);
-        setTime(formattedTime);
-    }, []);
-
-    // Estado para mostrar u ocultar el modal
-    const [showModal, setShowModal] = useState(false);
-    const handleCloseModal = () => {
-        setShowModal(false);
-    };
-
-    return (
-        <MainContainer>
-
-            <Header />
-
-            <Container>
-
-                <FlexRow>
-
-                    <Button onClick={() => setShowModal(true)}>📄 Generar Reporte</Button>
-
-                    {/*  **Ventana Emergente para generar Reporte** */}
-                    {showModal && (
-                        <ModalOverlay>
-                            <ModalContent>
-                                <Section>
-                                    <VolverBtn > <Icon onClick={handleCloseModal} src={backIcon} />  </VolverBtn>
-                                    <SubTitulo stitle=" 📅 Por Periodo de Tiempo" />
-                                    <DateContainer>
-                                        <Label>Del: <DateBox /></Label>
-                                        <Label>Al: <DateBox /></Label>
-                                    </DateContainer>
-                                </Section>
-
-                                <Section>
-                                    <SubTitulo stitle="📆 Por Día" />
-                                    <Label>Fecha: <DateBox /></Label>
-                                </Section>
-
-                                <Button>📄 Generar</Button>
-                            </ModalContent>
-                        </ModalOverlay>
-                    )}
+    fetchCajaMovimientos();
+  }, []);
 
 
+  // --------------------------------------------------
+  // Manejo del Modal (Reporte)
+  // --------------------------------------------------
+  // Estados para la fecha y hora actual
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const now = new Date();
+    const formattedDate = now.toISOString().split("T")[0];
+    const formattedTime = now.toTimeString().slice(0, 5);
+
+    setDate(formattedDate);
+    setTime(formattedTime);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      date: formattedDate,
+      time: formattedTime
+    }));
+  }, []);
+
+  // Estado para mostrar u ocultar el modal
+  const [showModal, setShowModal] = useState(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  return (
+    <MainContainer>
+
+      <Header />
+
+      <Container>
+
+        <FlexRow>
+
+          <Button onClick={() => setShowModal(true)}>📄 Generar Reporte</Button>
+
+          {/*  **Ventana Emergente para generar Reporte** */}
+          {showModal && (
+            <ModalOverlay>
+              <ModalContent>
+                <Section>
+                  <VolverBtn > <Icon onClick={handleCloseModal} src={backIcon} />  </VolverBtn>
+                  <SubTitulo stitle=" 📅 Por Periodo de Tiempo" />
+                  <DateContainer>
+                    <Label>Del: <DateBox /></Label>
+                    <Label>Al: <DateBox /></Label>
+                  </DateContainer>
+                </Section>
+
+                <Section>
+                  <SubTitulo stitle="📆 Por Día" />
+                  <Label>Fecha: <DateBox /></Label>
+                </Section>
+
+                <Button>📄 Generar</Button>
+              </ModalContent>
+            </ModalOverlay>
+          )}
 
 
 
-                    <Cont_lbl>
+          <Cont_lbl>
 
-                        <Label>
-                            📅 Fecha:
-                            <DateBox value={date} onChange={(e) => setDate(e.target.value)}  readOnly />
-                        </Label>
-                        <Label>
-                            ⏰ Hora:
-                            <TimeBox value={time} onChange={(e) => setTime(e.target.value)} readOnly />
-                        </Label>
-                    </Cont_lbl>
-                </FlexRow>
+            <Label>
+              📅 Fecha:
+              <DateBox value={date} onChange={handleInputChange} readOnly />
+            </Label>
+            <Label>
+              ⏰ Hora:
+              <TimeBox value={time} onChange={handleInputChange} readOnly />
+            </Label>
+          </Cont_lbl>
+        </FlexRow>
 
-                <Cont_inputs>
-                    <Label>
-                        Monto: $
-                        <TextBox />
-                    </Label>
+        <Cont_inputs>
+          <Label>
+            Monto: $
+            <TextBox name="amount" value={formData.amount} onChange={handleInputChange} placeholder="0.00" />
+          </Label>
 
-                    <Label>
-                        Motivo:
-                        <DropBox >
-                            <option value="Cobro Pedido">Seleccionar</option>
-                            <option value="Cobro Pedido">Cobro Pedido</option>
-                            <option value="Pago a Proveedor">Pago a Proveedor</option>
 
-                        </DropBox>
-                    </Label>
+          <Label>
+            Motivo:
+            <DropBox name="reason" value={formData.reason} onChange={handleInputChange}>
+              <option value="Default">Seleccionar</option>
+              <option value="Cobro Pedido">Cobro Pedido</option>
+              <option value="Pago a Proveedor">Pago a Proveedor</option>
 
-                    <Label>
-                        Referencia:
-                        <TextBox placeholder="# Pedido/Mov Inventario" />
-                    </Label>
-                </Cont_inputs>
-                <Button variant="primary" onClick={handleRegister} >💾 Registrar Movimiento</Button>
+            </DropBox>
+          </Label>
 
-                <Table>
-                    <thead>
-                        <tr>
-                            <Th>Usuario</Th>
-                            <Th>Monto $</Th>
-                            <Th>Referencia #</Th>
-                            <Th>Motivo</Th>
-                            <Th>Fecha y Hora </Th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <Td>Usuario01</Td>
-                            <Td>$150</Td>
-                            <Td>Pedido #04</Td>
-                            <Td>Cobro Pedido</Td>
-                            <Td>11:00 AM - 18/03/2025</Td>
-                        </tr>
-                        <tr>
-                            <Td>Usuario01</Td>
-                            <Td>$5000</Td>
-                            <Td>(Id de movimiento de historial)</Td>
-                            <Td>Pago a Proveedor</Td>
-                            <Td>6:30 AM - 18/03/2025</Td>
-                        </tr>
-                    </tbody>
-                </Table>
-            </Container>
-        </MainContainer>
-    );
+          <Label>
+            Referencia:
+            <TextBox name="reference" value={formData.reference} onChange={handleInputChange}
+              placeholder="# Pedido/ID Solicitud" />
+          </Label>
+        </Cont_inputs>
+        <Button variant="primary" onClick={handleRegister} >💾 Registrar Movimiento</Button>
+
+        <Table>
+          <thead>
+            <tr>
+              <Th>Usuario</Th>
+              <Th>#Referencia</Th>
+              <Th>Motivo</Th>
+              <Th>Monto</Th>
+              <Th>Fecha/Hora</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {movimientosCaja.map((mov) => (
+              <tr key={mov.Id}>
+
+                <Td>{mov.usuario}</Td>
+                <Td>{mov.referencia}</Td>
+                <Td>{mov.motivo}</Td>
+                <Td>${mov.monto}</Td>
+                <Td>
+                  {mov.fechaHora ? new Date(mov.fechaHora).toLocaleString() : ""}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Container>
+    </MainContainer>
+  );
 };
 
 export default Caja;
