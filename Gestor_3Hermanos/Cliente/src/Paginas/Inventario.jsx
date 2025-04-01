@@ -1,33 +1,29 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { toast } from 'react-toastify';
+
+// Componentes Basicos
 import { Table, Th, Td } from '../Componentes/Table';
 import Button from '../Componentes/Button';
 import Icon from '../Componentes/Icon';
 import { TextBox } from '../Componentes/TextComponent';
 import SubTitle from '../Componentes/SubTitle';
-import DropBox from '../Componentes/DropBox';
 
+// Componentes Compuestos
 import Header from '../Componentes/Header';
 import MainContainer from '../Componentes/MainContainer';
 import ModalProducto from '../Componentes/ModalProducto';
 
-// Iconos (puedes reemplazar con tus propios assets)
+// Iconos
 import searchIcon from '../Componentes/Iconos/buscar.png';
 import addIcon from '../Componentes/Iconos/add.png';
 import editIcon from '../Componentes/Iconos/edit.png';
-import details from '../Componentes/Iconos/details.png';
-import idIcon from '../Componentes/Iconos/id.png';
-import productoIcon from '../Componentes/Iconos/productoIcon.png';
 import stockIcon from '../Componentes/Iconos/stock.png';
-import priceIcon from '../Componentes/Iconos/priceIcon.png';
-import proveedorIcon from '../Componentes/Iconos/proveedorIcon.png';
-import newIcon from '../Componentes/Iconos/preparando.png';
 import historyIcon from '../Componentes/Iconos/history.png';
+import deleteIcon from '../Componentes/Iconos/delete.png';
 
-
-import backIcon from "../Componentes/Iconos/back.png";
 
 
 // Estilos principales
@@ -100,62 +96,6 @@ const ActionButtons = styled.div`
 `;
 
 
-
-//  **Estilos del modal**
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ModalContent = styled.div`
-  background: #f9f4ee;
-  Border: 4px dashed #b3815d;
-  padding: 1.5rem;
-  gap: 1rem;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  border-bottom: 1px solid #b3815d;
-  padding-bottom: 0.5rem;
-`;
-
-const VolverBtn = styled.a`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: end;
-    margin: fit-content;
-    padding: 10px;
-    text-decoration: none;
-    color: #8B572A;
-
-    cursor: pointer;
-`;
-const Label = styled.label`
-  font-weight: bold;
-  color: #5d4037;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-
 // Componente principal
 function GestionInventario() {
     // Estado para el producto seleccionado
@@ -172,55 +112,15 @@ function GestionInventario() {
         proveedor: "",
     });
 
+    // Datos de ejemplo basados en el modelo
+    const [productos, setProductos] = useState([]);
+
+    const [showModal, setShowModal] = useState(false);
+    const [modalMode, setModalMode] = useState("nuevo");
+    const [mode, setMode] = useState("default");
 
 
-    // Datos de ejemplo basados en tu modelo
-    const productos = [
-        {
-            productoId: 1001,
-            nombre: 'Chuleta de Cerdo',
-            descripcion: 'Chuleta de cerdo fresca',
-            precio: 150.00,
-            stock: 20,
-            proveedor: {
-                nombre: 'Carnes del Norte',
-                contacto: 'Juan Pérez - 555-123456'
-            },
-            historialInventario: [
-                {
-                    cantidad: 10,
-                    tipoMovimiento: 'Entrada',
-                    fechaMovimiento: '2025-03-25',
-                    usuarioId: 1
-                },
-                {
-                    cantidad: -5,
-                    tipoMovimiento: 'Salida',
-                    fechaMovimiento: '2025-03-20',
-                    usuarioId: 2
-                }
-            ]
-        },
-        {
-            productoId: 1002,
-            nombre: 'Lomo de Cerdo',
-            descripcion: 'Lomo de cerdo fresco',
-            precio: 120.00,
-            stock: 15,
-            proveedor: {
-                nombre: 'Avícola Sureña',
-                contacto: 'María Gómez - 555-654321'
-            },
-            historialInventario: [
-                {
-                    cantidad: 15,
-                    tipoMovimiento: 'Entrada',
-                    fechaMovimiento: '2025-03-22',
-                    usuarioId: 1
-                }
-            ]
-        }
-    ];
+
 
     // Filtrar productos basado en la búsqueda
     const filteredProducts = productos.filter(producto =>
@@ -231,17 +131,160 @@ function GestionInventario() {
         setShowModal(false);
     };
 
-
-
-    const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState("nuevo");
-
-    const [mode, setMode] = useState("default");
-
     const openModal = (newMode) => {
         setMode(newMode);
         setShowModal(true);
     };
+
+    useEffect(() => {
+        fetchProductos();
+    }, []);
+
+    const API_URL = "http://localhost:3000/api";
+
+    // Función genérica para peticiones
+    const apiRequest = async (method, endpoint, body = null) => {
+        try {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                ...(body && { body: JSON.stringify(body) })
+            };
+
+            const response = await fetch(`${API_URL}/${endpoint}`, options);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Error en la solicitud");
+            }
+
+            return data;
+        } catch (error) {
+            console.error(`Error ${method} ${endpoint}`, error);
+            throw error;
+        }
+    };
+
+
+
+    // OBTENER PRODUCTOS
+    const fetchProductos = async () => {
+        try {
+            const data = await apiRequest("GET", "productos");
+            setProductos(data.data); // Corregí el nombre de la variable (era setProducts)
+        } catch (error) {
+            toast.error("Error al cargar productos", error);
+        }
+    };
+
+
+    // INSERTAR PRODUCTO
+    const handleCreateProducto = async (nuevoProducto) => {
+        try {
+            const data = await apiRequest("POST", "productos", nuevoProducto);
+            setProductos(prev => [...prev, data.data]);
+            toast.success("Producto creado exitosamente");
+            return true; // Para indicar éxito al modal
+        } catch (error) {
+            console.error("Error al crear producto:", error);
+            toast.error(error.message || "Error al crear producto");
+            return false; // Para indicar fallo al modal
+        }
+    };
+
+    const handleUpdateProducto = async (productoActualizado) => {
+        try {
+            const data = await apiRequest("PUT", `productos/${productoActualizado.productoId}`, productoActualizado);
+            setProductos(prev =>
+                prev.map(p => p.productoId === productoActualizado.productoId ? data.data : p)
+            );
+            toast.success("Producto actualizado exitosamente");
+            return true;
+        } catch (error) {
+            console.error("Error al actualizar producto:", error);
+            toast.error(error.message || "Error al actualizar producto");
+            return false;
+        }
+    };
+
+    const handleDeleteProducto = async (productoId) => {
+        try {
+            await apiRequest("DELETE", `productos/${productoId}`);
+            setProductos(prev => prev.filter(p => p.productoId !== productoId));
+            setSelectedProduct(null);
+            toast.success("Producto eliminado exitosamente");
+        } catch (error) {
+            console.error("Error al eliminar producto:", error);
+            toast.error(error.message || "Error al eliminar producto");
+        }
+    };
+
+    // ACTUALIZAR STOCK
+    // Función para agregar stock con todas las validaciones
+    const handleAgregarStock = async (productoId, cantidad, usuarioId) => {
+        try {
+            // 1. Buscar producto actual en el estado
+            const productoActual = productos.find(p => p.productoId === productoId);
+            if (!productoActual) throw new Error("Producto no encontrado");
+
+            // 2. Calcular nuevo stock
+            const nuevoStock = productoActual.stock + cantidad;
+            if (nuevoStock < 0) throw new Error("Stock no puede ser negativo");
+
+            // 3. Crear movimiento
+            const movimiento = {
+                cantidad,
+                tipoMovimiento: "Entrada",
+                usuarioId,
+                fechaMovimiento: new Date().toISOString()
+            };
+
+            // 4. Enviar petición
+            const response = await apiRequest("PUT", `productos/${productoId}`, {
+                stock: nuevoStock,
+                historialInventario: [movimiento]
+            });
+
+            // 5. Actualizar estado local de forma optimista
+            setProductos(prev =>
+                prev.map(p => p.productoId === productoId ? {
+                    ...p,
+                    stock: response.data.stock,
+                    historialInventario: [
+                        ...p.historialInventario,
+                        ...response.data.historialInventario
+                    ]
+                } : p)
+            );
+
+            // 6. Notificación al usuario
+            toast.success("Stock actualizado correctamente");
+
+        } catch (error) {
+            console.error("Error al actualizar stock:", error);
+            toast.error(error.message);
+        }
+    };
+
+    // CREAR SOLICITUD A PROVEEDOR
+    const handleSolicitudProveedor = async (productoId, proveedorId, cantidad) => {
+        try {
+            await apiRequest("POST", "solicitudes", {
+                productoId,
+                proveedorId,
+                cantidad,
+                estado: "Pendiente"
+            });
+
+            // Opcional: manejar estado si necesitas actualizar UI
+        } catch (error) {
+            console.error("Error al crear solicitud:", error);
+        }
+    };
+
 
 
 
@@ -270,7 +313,15 @@ function GestionInventario() {
 
 
                         {showModal && (
-                            <ModalProducto mode={mode} showModal={showModal} handleCloseModal={handleCloseModal} />
+                            <ModalProducto
+                                mode={mode}
+                                showModal={showModal}
+                                handleCloseModal={handleCloseModal}
+                                onSave={mode === "nuevo" ? handleCreateProducto :
+                                    mode === "editar" ? handleUpdateProducto :
+                                        handleAgregarStock}
+                                selectedProduct={selectedProduct}
+                            />
                         )}
 
 
@@ -283,8 +334,8 @@ function GestionInventario() {
                         <tr>
                             <Th>🏷️ ID</Th>
                             <Th>📦 Nombre</Th>
-                            <Th>📉 Stock</Th>
                             <Th>💲 Precio</Th>
+                            <Th>📉 Stock</Th>
                         </tr>
                     </thead>
                     <tbody>
@@ -296,8 +347,8 @@ function GestionInventario() {
                             >
                                 <Td>{producto.productoId}</Td>
                                 <Td>{producto.nombre}</Td>
-                                <Td>{producto.stock} kg</Td>
                                 <Td>${producto.precio.toFixed(2)}</Td>
+                                <Td>{producto.stock} kg</Td>
                             </tr>
                         ))}
                     </tbody>
@@ -320,6 +371,13 @@ function GestionInventario() {
                                 </Button>
                                 <Button size="medium" variant="secondary" onClick={() => openModal("agregarStock")}>
                                     <Icon src={stockIcon} /> Agregar Stock
+                                </Button>
+                                <Button size="medium" variant="danger" onClick={() => {
+                                    if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
+                                        handleDeleteProducto(selectedProduct.productoId);
+                                    }
+                                }}>
+                                    <Icon src={deleteIcon} /> Eliminar
                                 </Button>
                                 <Button size="medium" variant="secondary">
                                     <Icon src={historyIcon} /> Ver Solicitudes
