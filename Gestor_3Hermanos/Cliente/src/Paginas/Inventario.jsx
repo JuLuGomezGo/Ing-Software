@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { toast } from 'react-toastify';
 
 // Componentes Basicos
 import { Table, Th, Td } from '../Componentes/Table';
@@ -22,7 +21,6 @@ import addIcon from '../Componentes/Iconos/add.png';
 import editIcon from '../Componentes/Iconos/edit.png';
 import stockIcon from '../Componentes/Iconos/stock.png';
 import historyIcon from '../Componentes/Iconos/history.png';
-import deleteIcon from '../Componentes/Iconos/delete.png';
 
 
 
@@ -140,7 +138,7 @@ function GestionInventario() {
         fetchProductos();
     }, []);
 
-    const API_URL = "http://localhost:3000/api";
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
     // Función genérica para peticiones
     const apiRequest = async (method, endpoint, body = null) => {
@@ -149,7 +147,7 @@ function GestionInventario() {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}` // Seguridad añadida
                 },
                 ...(body && { body: JSON.stringify(body) })
             };
@@ -163,7 +161,7 @@ function GestionInventario() {
 
             return data;
         } catch (error) {
-            console.error(`Error ${method} ${endpoint}`, error);
+            console.error(`Error ${method} ${endpoint}:`, error);
             throw error;
         }
     };
@@ -174,51 +172,21 @@ function GestionInventario() {
     const fetchProductos = async () => {
         try {
             const data = await apiRequest("GET", "productos");
-            setProductos(data.data); // Corregí el nombre de la variable (era setProducts)
+            setProductos(data.data);
         } catch (error) {
-            toast.error("Error al cargar productos", error);
+            console.error("Error al cargar productos:", error);
         }
     };
+
 
 
     // INSERTAR PRODUCTO
-    const handleCreateProducto = async (nuevoProducto) => {
+    const handleCrearProducto = async (nuevoProducto) => {
         try {
             const data = await apiRequest("POST", "productos", nuevoProducto);
             setProductos(prev => [...prev, data.data]);
-            toast.success("Producto creado exitosamente");
-            return true; // Para indicar éxito al modal
         } catch (error) {
             console.error("Error al crear producto:", error);
-            toast.error(error.message || "Error al crear producto");
-            return false; // Para indicar fallo al modal
-        }
-    };
-
-    const handleUpdateProducto = async (productoActualizado) => {
-        try {
-            const data = await apiRequest("PUT", `productos/${productoActualizado.productoId}`, productoActualizado);
-            setProductos(prev =>
-                prev.map(p => p.productoId === productoActualizado.productoId ? data.data : p)
-            );
-            toast.success("Producto actualizado exitosamente");
-            return true;
-        } catch (error) {
-            console.error("Error al actualizar producto:", error);
-            toast.error(error.message || "Error al actualizar producto");
-            return false;
-        }
-    };
-
-    const handleDeleteProducto = async (productoId) => {
-        try {
-            await apiRequest("DELETE", `productos/${productoId}`);
-            setProductos(prev => prev.filter(p => p.productoId !== productoId));
-            setSelectedProduct(null);
-            toast.success("Producto eliminado exitosamente");
-        } catch (error) {
-            console.error("Error al eliminar producto:", error);
-            toast.error(error.message || "Error al eliminar producto");
         }
     };
 
@@ -269,24 +237,6 @@ function GestionInventario() {
         }
     };
 
-    // CREAR SOLICITUD A PROVEEDOR
-    const handleSolicitudProveedor = async (productoId, proveedorId, cantidad) => {
-        try {
-            await apiRequest("POST", "solicitudes", {
-                productoId,
-                proveedorId,
-                cantidad,
-                estado: "Pendiente"
-            });
-
-            // Opcional: manejar estado si necesitas actualizar UI
-        } catch (error) {
-            console.error("Error al crear solicitud:", error);
-        }
-    };
-
-
-
 
     return (
         <MainContainer>
@@ -317,10 +267,7 @@ function GestionInventario() {
                                 mode={mode}
                                 showModal={showModal}
                                 handleCloseModal={handleCloseModal}
-                                onSave={mode === "nuevo" ? handleCreateProducto :
-                                    mode === "editar" ? handleUpdateProducto :
-                                        handleAgregarStock}
-                                selectedProduct={selectedProduct}
+                                onSave={handleCrearProducto}
                             />
                         )}
 
@@ -371,13 +318,6 @@ function GestionInventario() {
                                 </Button>
                                 <Button size="medium" variant="secondary" onClick={() => openModal("agregarStock")}>
                                     <Icon src={stockIcon} /> Agregar Stock
-                                </Button>
-                                <Button size="medium" variant="danger" onClick={() => {
-                                    if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
-                                        handleDeleteProducto(selectedProduct.productoId);
-                                    }
-                                }}>
-                                    <Icon src={deleteIcon} /> Eliminar
                                 </Button>
                                 <Button size="medium" variant="secondary">
                                     <Icon src={historyIcon} /> Ver Solicitudes

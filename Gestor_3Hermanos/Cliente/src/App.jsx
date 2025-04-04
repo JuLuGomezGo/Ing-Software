@@ -15,7 +15,7 @@ import GestionUsuarios from './Paginas/GestionUsuarios';
 import PedidosRepartidor from './Paginas/PedidosRepartidor';
 import MainContainer from './Componentes/MainContainer';
 
-import Error404 from './Paginas/Error404';  // Nueva página de error
+// import Error404 from './Paginas/Error404';  // Nueva página de error
 
 
 function App() {
@@ -58,8 +58,8 @@ function App() {
             <Route path="/pedidos" element={<PedidosRepartidor />} />
           )}
 
-          {/* Página de error 404 */}
-          <Route path="*" element={<Error404 />} />
+          {/* Página de error 404
+          <Route path="*" element={<Error404 />} /> */}
         </Routes>
       </BrowserRouter>
     </MainContainer>

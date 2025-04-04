@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; 
 import styled from "styled-components";
 
 import Header from "../Componentes/Header";
@@ -66,6 +67,7 @@ const ModalContent = styled.div`
 // --------------------------------------------------
 
 function Home() {
+  const navigate = useNavigate(); // Añade este hook
   // 1) Productos Disponibles (desde /api/productos)
   const [productosDisponibles, setProductosDisponibles] = useState([]);
 
@@ -234,7 +236,7 @@ function Home() {
       {/* Tabla grande de Pedidos */}
       <LargeTableContainer>
         <SubTittle stitle="Pedidos" />
-        <Button variant="primary" size="large" style={{ margin: "10px 0" }}>
+        <Button variant="primary" size="large" style={{ margin: "10px 0" }} onClick={() => navigate('/gestion-pedidos')}>
           Generar Pedido
         </Button>
         <Table>

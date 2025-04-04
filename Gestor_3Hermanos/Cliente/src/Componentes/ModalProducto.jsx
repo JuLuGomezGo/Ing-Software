@@ -71,95 +71,26 @@ const Label = styled.label`
   gap: 0.5rem;
 `;
 
-const usuarioLogueado = localStorage.getItem("usuario");
-const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
-const idUsuario = usuario?.usuarioId;
+const ModalProducto = ({ showModal, handleCloseModal, mode, onSave }) => {
+    if (!showModal) return null;
 
-
-const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, selectedProduct }) => {
     const [formData, setFormData] = useState({
         productoId: "",
         nombre: "",
         descripcion: "",
         precio: "",
         stock: "",
-        proveedor: ""
+        // proveedorId: ""
     });
 
-
-    // Cargar datos del producto seleccionado cuando el modal se abre en modo edición
-    useEffect(() => {
-        if ((mode === "editar" || mode === "agregarStock") && selectedProduct) {
-            setFormData({
-                productoId: selectedProduct.productoId,
-                nombre: selectedProduct.nombre,
-                descripcion: selectedProduct.descripcion,
-                precio: selectedProduct.precio,
-                stock: mode === "agregarStock" ? "" : selectedProduct.stock,
-                proveedor: selectedProduct.proveedor?.proveedorId || ""
-            });
-        } else if (mode === "nuevo") {
-            setFormData({
-                productoId: "",
-                nombre: "",
-                descripcion: "",
-                precio: "",
-                stock: "",
-                proveedor: ""
-            });
-        }
-    }, [mode, selectedProduct]);
-
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setProducto({ ...formData, [e.target.name]: e.target.value });
     };
 
-
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        // Validaciones básicas
-        if (mode !== "agregarStock" && (!formData.nombre || !formData.precio)) {
-            toast.error("Nombre y precio son campos requeridos");
-            return;
-        }
-
-        if (mode === "agregarStock" && !formData.stock) {
-            toast.error("Debe especificar la cantidad de stock");
-            return;
-        }
-
-        // Preparar datos según el modo
-        let datosEnviar;
-        if (mode === "agregarStock") {
-            datosEnviar = {
-                productoId: formData.productoId,
-                stock: Number(formData.stock),
-                historialInventario: [{
-                    cantidad: Number(formData.stock),
-                    tipoMovimiento: "Entrada",
-                    usuarioId: idUsuario
-                }]
-            };
-        } else {
-            datosEnviar = {
-                ...formData,
-                precio: Number(formData.precio),
-                stock: Number(formData.stock || 0)
-            };
-        }
-
-        const success = await onSave(datosEnviar);
-        if (success) {
-            handleCloseModal();
-        }
+    const handleSubmit = () => {
+        onSave(producto);
+        handleCloseModal();
     };
-
 
     const handleSave = () => {
         if (mode === "nuevo") {
@@ -167,7 +98,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, selectedProd
             toast.info("Guardando nuevo producto:", formData);
 
             // Ejemplo de petición POST si usas Fetch:
-            fetch("/productos", {
+            fetch("http://localhost:3000/api/productos", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json, ",
@@ -189,8 +120,69 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, selectedProd
         }
     };
 
+    useEffect(() => {
+        fetchProveedoresUnicos();
+    //     fetchProductosConProveedores();
+    }, []);
+
+
+    const [proveedores, setProveedores] = useState([]);
+
+    const fetchProveedoresUnicos = async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/productos`);
+            const result = await response.json();
+
+            if (result.success && Array.isArray(result.data)) {
+                // Extrae los nombres de los proveedores
+                setProveedores(result.data.map(producto => producto.proveedor.nombre));
+            } else {
+                console.error("El formato de los datos no es el esperado:", result);
+            }
+        } catch (error) {
+            console.error("Error cargando proveedores:", error);
+        }
+    };
+
+    fetchProveedoresUnicos();
+
+
+
+    // CÓDIGO PARA OBTENER LOS PROVEEDORES DE UN PRODUCTO ESPECÍFICO
+    // const fetchProductosConProveedores = async (productoId) => {
+    //     try {
+    //         const response = await fetch(`http://localhost:3000/api/productos`);
+    //         const result = await response.json();
+
+    //         if (result.success && Array.isArray(result.data)) {
+    //             // Filtramos el producto seleccionado
+    //             const productoSeleccionado = result.data.find(p => p.productoId === productoId);
+
+    //             if (!productoSeleccionado) {
+    //                 console.error("Producto no encontrado");
+    //                 return;
+    //             }
+
+    //             // Extraemos los proveedores (ajustar si el modelo cambia)
+    //             const proveedores = Array.isArray(productoSeleccionado.proveedores)
+    //                 ? productoSeleccionado.proveedores.map(proveedor => proveedor.nombre)
+    //                 : [productoSeleccionado.proveedor.nombre];
+
+
+    //             console.log("Proveedores del producto:", proveedores);
+    //         } else {
+    //             console.error("Formato de datos inesperado:", result);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error obteniendo proveedores:", error);
+    //     }
+    // };
+
+
 
     // Definir título y botón según la acción
+
+
     const getModalConfig = () => {
         switch (mode) {
             case "nuevo":
@@ -245,9 +237,10 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, selectedProd
                         value={formData.proveedor}
                         onChange={(e) => setFormData({ ...formData, proveedor: e.target.value })}
                     >
-                        <option value="Default">Seleccionar</option>
-                        <option value="Proveedor1">Proveedor 1</option>
-                        <option value="Proveedor2">Proveedor 2</option>
+                        <option value="">Seleccione un proveedor</option>
+                        {proveedores.map((nombre, index) => (
+                            <option key={index} value={nombre}>{nombre}</option>
+                        ))}
                     </DropBox>
 
                 </Label>

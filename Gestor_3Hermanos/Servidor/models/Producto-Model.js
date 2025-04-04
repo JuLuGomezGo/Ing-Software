@@ -41,7 +41,8 @@ proveedorSchema.pre('save', async function(next) {
   next();
 });
 
-const Proveedor = mongoose.model('Proveedor', proveedorSchema);
+// const Proveedor = mongoose.model('Proveedor', proveedorSchema);
+// const HistorialInventario = mongoose.model('HistorialInventario', historialInventarioSchema);
 
 // Modelo de HistorialInventario
 const historialInventarioSchema = new mongoose.Schema({
@@ -63,7 +64,6 @@ historialInventarioSchema.pre('save', async function(next) {
   next();
 });
 
-const HistorialInventario = mongoose.model('HistorialInventario', historialInventarioSchema);
 
 // Modelo de Producto
 const productoSchema = new mongoose.Schema({
@@ -133,3 +133,4 @@ productoSchema.pre('save', async function(next) {
 const Producto = mongoose.model('Producto', productoSchema);
 
 export default Producto;
+
