@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
       data: respuesta
     });
   } catch (error) {
-    const mensajeError = error.message.includes('validation') 
+    const mensajeError = error.message.includes('validation')
       ? 'Datos inválidos: ' + error.message.replace('Validation failed: ', '')
       : error.message;
 
@@ -81,7 +81,7 @@ router.put('/:id', async (req, res) => {
   try {
     // Buscar el producto por ID 
     const producto = await Producto.findOne({ productoId: req.params.id });
-    
+
     if (!producto) {
       return res.status(404).json({
         success: false,
@@ -105,7 +105,7 @@ router.put('/:id', async (req, res) => {
     // Actualizar proveedor 
     if (req.body.proveedor) {
       producto.proveedor = {
-        ...producto.proveedor.toObject(), 
+        ...producto.proveedor.toObject(),
         ...req.body.proveedor
       };
       delete producto.proveedor._id; // Eliminar ID existente para evitar conflicto
@@ -131,7 +131,7 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     // Manejo mejorado de errores
     let mensajeError = error.message;
-    
+
     if (error.name === 'ValidationError') {
       const errores = Object.values(error.errors).map(err => err.message);
       mensajeError = `Errores de validación: ${errores.join(', ')}`;
@@ -143,6 +143,32 @@ router.put('/:id', async (req, res) => {
     });
   }
 });
+
+//PATCH para actualizar unicamente los valores necesarios.
+router.patch('/:id', async (req, res) => {
+  try {
+
+    const producto = await Producto.findOneAndUpdate(
+      { productoId: Number(req.params.id) },
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!producto) {
+      return res.status(404).json({ success: false, message: "Producto no encontrado" });
+    }
+
+    // Actualiza solo los campos enviados
+    // await producto.update(datosActualizados);
+
+    res.json({ success: true, message: "Producto actualizado", data: producto });
+  } catch (error) {
+    console.error(error); // Muestra el error en consola para más detalles
+    res.status(500).json({ success: false, message: "Error interno", error: error.message });
+  }
+});
+
+
 
 // Eliminar producto
 router.delete('/:id', async (req, res) => {

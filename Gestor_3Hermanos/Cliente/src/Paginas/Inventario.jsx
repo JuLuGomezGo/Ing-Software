@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import styled from 'styled-components';
 
 // Componentes Basicos
@@ -21,7 +22,7 @@ import addIcon from '../Componentes/Iconos/add.png';
 import editIcon from '../Componentes/Iconos/edit.png';
 import stockIcon from '../Componentes/Iconos/stock.png';
 import historyIcon from '../Componentes/Iconos/history.png';
-
+import deleteIcon from '../Componentes/Iconos/delete.png';
 
 
 // Estilos principales
@@ -96,9 +97,11 @@ const ActionButtons = styled.div`
 
 // Componente principal
 function GestionInventario() {
+
     // Estado para el producto seleccionado
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [productoEnModal, setProductoEnModal] = useState(null);
 
     const [modalOpen, setModalOpen] = useState(false);
     const [producto, setProducto] = useState({
@@ -180,15 +183,70 @@ function GestionInventario() {
 
 
 
-    // INSERTAR PRODUCTO
-    const handleCrearProducto = async (nuevoProducto) => {
+
+    const handleGuardarProducto = async (producto) => {
+        if (!producto) {
+            console.error("Producto no definido en handleGuardarProducto");
+            return;
+        }
+
+        // Definir si es POST (nuevo) o PATCH (editar/agregar stock)
+        const isNuevo = mode === "nuevo";
+        const url = isNuevo
+            ? "http://localhost:3000/api/productos" // POST sin ID en la URL
+            : `http://localhost:3000/api/productos/${producto.productoId}`; // PATCH con ID
+
+        const method = isNuevo ? "POST" : "PATCH";
+
         try {
-            const data = await apiRequest("POST", "productos", nuevoProducto);
-            setProductos(prev => [...prev, data.data]);
+            console.log("Enviando producto:", JSON.stringify(producto, null, 2));
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(producto)
+            });
+
+            const data = await response.json();
+            console.log("Respuesta del servidor:", data); // Agregar este log
+
+            if (!response.ok) throw new Error(data.message || "Error al actualizar");
+
+            // Actualizar la lista de productos
+            if (!isNuevo) {
+                setProductos(prev =>
+                    prev.map(prod => prod.productoId === data.data.productoId ? data.data : prod)
+                );
+            } else {
+                setProductos(prev => [...prev, data.data]);
+            }
+
+            toast.success(data.message || "Producto actualizado");
+            handleCloseModal();
+
         } catch (error) {
-            console.error("Error al crear producto:", error);
+            toast.error(error.message);
+            console.error("Detalles del error:", error);
         }
     };
+
+
+
+    const handleDeleteProducto = async (productoId) => {
+        try {
+            await apiRequest("DELETE", `productos/${productoId}`);
+            setProductos(prev => prev.filter(p => p.productoId !== productoId));
+            setSelectedProduct(null);
+            toast.success("Producto eliminado exitosamente");
+        } catch (error) {
+            toast.error(error.message || "Error al eliminar producto");
+        }
+    };
+
+
+
 
     // ACTUALIZAR STOCK
     // Función para agregar stock con todas las validaciones
@@ -267,7 +325,9 @@ function GestionInventario() {
                                 mode={mode}
                                 showModal={showModal}
                                 handleCloseModal={handleCloseModal}
-                                onSave={handleCrearProducto}
+                                productoSeleccionado={productoEnModal}
+                                onSave={(handleGuardarProducto)}
+
                             />
                         )}
 
@@ -313,11 +373,24 @@ function GestionInventario() {
                             <p><strong>📞 Contacto:</strong> {selectedProduct.proveedor.contacto}</p>
 
                             <ActionButtons>
-                                <Button size="medium" variant="primary" onClick={() => openModal("editar")}>
+                                <Button size="medium" variant="primary" onClick={() => {
+                                    setProductoEnModal(selectedProduct);
+                                    openModal("editar");
+                                }}>
                                     <Icon src={editIcon} /> Editar
                                 </Button>
-                                <Button size="medium" variant="secondary" onClick={() => openModal("agregarStock")}>
+                                <Button size="medium" variant="secondary" onClick={() => {
+                                    setProductoEnModal(selectedProduct);
+                                    openModal("agregarStock")
+                                }}>
                                     <Icon src={stockIcon} /> Agregar Stock
+                                </Button>
+                                <Button size="medium" variant="danger" onClick={() => {
+                                    if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
+                                        handleDeleteProducto(selectedProduct.productoId);
+                                    }
+                                }}>
+                                    <Icon src={deleteIcon} /> Eliminar
                                 </Button>
                                 <Button size="medium" variant="secondary">
                                     <Icon src={historyIcon} /> Ver Solicitudes

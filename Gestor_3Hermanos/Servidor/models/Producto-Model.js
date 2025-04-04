@@ -25,7 +25,7 @@ const generarIdUnico = async (modelName, campoId) => {
 const proveedorSchema = new mongoose.Schema({
   proveedorId: {
     type: Number,
-    unique: true,
+    required: true,
     validate: (v) => /^\d{4}$/.test(v.toString())
   },
   nombre: { type: String, required: true },
