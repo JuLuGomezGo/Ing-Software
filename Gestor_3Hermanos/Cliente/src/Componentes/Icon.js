@@ -2,8 +2,12 @@ import styled from 'styled-components';
 
 
 const Icon = styled.img`
-width: 1.3rem;
-padding: 0 5px 0 0; 
+width: ${({ tamaño }) => tamaño ? tamaño : '1.5rem' };
+padding: 0 5px; 
 `;
+
+//Parametros que recibe el componente
+//nombre: Ruta de la imagen
+//tamaño: Tamaño de la imagen
 
 export default Icon;
