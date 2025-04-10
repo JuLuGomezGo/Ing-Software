@@ -111,4 +111,24 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// GET - Obtener enlace de Google Maps con dirección del pedido
+router.get('/:id/mapa', async (req, res) => {
+  try {
+    const pedido = await Pedido.findOne({ pedidoId: req.params.id });
+    if (!pedido) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    const direccionCodificada = encodeURIComponent(pedido.direccionEntrega);
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${direccionCodificada}`;
+
+    res.json({
+      direccion: pedido.direccionEntrega,
+      googleMapsUrl
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener la dirección', detalles: error.message });
+  }
+});
+
 export default router;
