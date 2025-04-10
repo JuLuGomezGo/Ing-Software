@@ -5,11 +5,12 @@ import { toast } from 'react-toastify';
 import styled from 'styled-components';
 
 // Componentes Basicos
-import { Table, Th, Td } from '../Componentes/Table';
+import { Table, Th, Td, Tr } from '../Componentes/Table';
 import Button from '../Componentes/Button';
 import Icon from '../Componentes/Icon';
 import { TextBox } from '../Componentes/TextComponent';
 import SubTitle from '../Componentes/SubTitle';
+import SearchBar from '../Componentes/Search';
 
 // Componentes Compuestos
 import Header from '../Componentes/Header';
@@ -44,19 +45,6 @@ const HeaderSection = styled.div`
   flex-wrap: wrap;
 `;
 
-const SearchBar = styled.div`
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-  max-width: 500px;
-  
-  input {
-    flex-grow: 1;
-    padding: 8px 12px;
-    border: 1px solid #8B572A;
-    border-radius: 4px;
-  }
-`;
 
 const FilterSection = styled.div`
   display: flex;
@@ -304,7 +292,8 @@ function GestionInventario() {
                 <HeaderSection>
                     <SubTitle stitle="Gestión de Inventario" />
 
-                    <SearchBar>
+                    <SearchBar ancho="90px">
+
                         <Icon src={searchIcon} />
                         <TextBox
                             placeholder="Buscar productos..."
@@ -336,7 +325,7 @@ function GestionInventario() {
                     </FilterSection>
                 </HeaderSection>
 
-                <Table>
+                <Table >
                     <thead>
                         <tr>
                             <Th>🏷️ ID</Th>
@@ -346,17 +335,18 @@ function GestionInventario() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredProducts.map(producto => (
-                            <tr
+                        {filteredProducts.map((producto, index) => (
+                            <Tr
                                 key={producto.productoId}
                                 onClick={() => setSelectedProduct(producto)}
-                                style={{ cursor: 'pointer', backgroundColor: selectedProduct?.productoId === producto.productoId ? '#e5c49f' : 'inherit' }}
+                                className={selectedProduct?.productoId === producto.productoId ? "selected" : ""}
+                                index={index}
                             >
                                 <Td>{producto.productoId}</Td>
                                 <Td>{producto.nombre}</Td>
                                 <Td>${producto.precio.toFixed(2)}</Td>
                                 <Td>{producto.stock} kg</Td>
-                            </tr>
+                            </Tr>
                         ))}
                     </tbody>
                 </Table>
