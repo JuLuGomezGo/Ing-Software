@@ -1,6 +1,3 @@
-
-
-
 /* ====== LISTA DE PEDIDOS ====== */
 .pedidos-list {
   list-style: none;
@@ -12,9 +9,9 @@
 .pedido-item {
   border-radius: 8px;
   margin-bottom: 1rem;
-  color: #000;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
+  overflow: hidden;
 }
 .pedido-item:hover {
   transform: translateY(-2px);
@@ -22,11 +19,14 @@
 
 /* ====== VISTA RESUMEN (cerrada) ====== */
 .summary-card {
-  background-color: #ffe5d5; /* Fondo durazno suave */
+  background-color: #93572d;
+  color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .summary-content {
@@ -45,41 +45,58 @@
 .direccion {
   font-weight: bold;
   font-size: 1rem;
+  color: #fff;
 }
 .pedido-id,
 .total {
   font-size: 0.9rem;
-  color: #333;
+  color: #f9e8da;
 }
 .cliente {
   font-weight: bold;
   font-size: 1rem;
-  color: #000;
+  color: #fff;
 }
 .estado {
   font-size: 0.9rem;
-  color: #666;
+  color: #f0d8c6;
 }
 .flecha {
-  font-size: 1rem;
-  color: #444;
+  font-size: 1.4rem;
+  color: #fff;
   cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.flecha.abierta {
+  transform: rotate(90deg);
 }
 
-/* ====== VISTA DETALLE (abierta) ====== */
+/* ====== VISTA DETALLE CON ANIMACIÓN ====== */
+.pedido-expandible {
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+  max-height: 0;
+  opacity: 0;
+}
+.pedido-expandible.abierto {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ====== DETALLE ====== */
 .detail-card {
-  background-color: #fef7f0; /* Fondo más claro */
+  background-color: #fdf1e6;
   padding: 1rem;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
-/* Encabezado: 2 columnas (izq: pedido, der: fecha) */
 .encabezado-detalle {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Para que la fecha quede un poco más arriba */
+  align-items: flex-start;
 }
 .encabezado-izq .numero-pedido {
   margin: 0;
@@ -91,8 +108,6 @@
   font-weight: bold;
   color: #333;
 }
-
-/* Filas de detalle para dirección+icono, cliente+select */
 .fila-detalle {
   display: flex;
   flex-direction: row;
@@ -105,79 +120,89 @@
   font-size: 0.9rem;
   font-weight: bold;
 }
-
-/* Ícono del mapa */
 .map-icon {
-  margin-left: auto; /* Empuja el ícono a la derecha */
+  margin-left: auto;
   width: 24px;
   height: 24px;
   cursor: pointer;
 }
 
-/* Select de estados */
+/* ====== SELECT ESTADOS ====== */
 .estado-select {
-  margin-left: auto; /* Empuja el select a la derecha */
-  padding: 0.3rem;
-  border-radius: 4px;
+  margin-left: auto;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff5eb;
+  color: #333;
   cursor: pointer;
-  /* Opcional: quitar la flecha nativa en Chrome/Edge/Firefox
-     y personalizar con background-image si quieres
-     -webkit-appearance: none; 
-     -moz-appearance: none; 
-     background-image: url('/assets/Iconos/expandir.png'); 
-     background-repeat: no-repeat;
-     background-position: right 0.5rem center; */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill=\"black\" height=\"18\" viewBox=\"0 0 24 24\" width=\"18\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 16px 16px;
+}
+.estado-select:hover {
+  border-color: #93572d;
+}
+.estado-select:focus {
+  border-color: #93572d;
+  outline: none;
 }
 
-/* Productos */
+/* ====== TABLA DE PRODUCTOS ====== */
 .productos-bloque h4 {
   margin: 0;
   font-size: 1rem;
   font-weight: bold;
 }
 .productos-table {
-  width: 100%;
   border-collapse: collapse;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
   font-size: 0.9rem;
-}
-.productos-table th,
-.productos-table td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 .productos-table th {
-  background-color: #f9d6c5;
+  background-color: #93572d;
+  color: white;
+  padding: 0.7rem;
+  text-align: left;
+  font-weight: bold;
+}
+.productos-table td {
+  padding: 0.6rem;
+  background-color: #fdf1e6;
+  color: #333;
+  border-bottom: 1px solid #e6c8b4;
+}
+.productos-table tr:last-child td {
+  border-bottom: none;
+}
+.productos-table tr:nth-child(even) td {
+  background-color: #fbe7dc;
 }
 
-
-/* Radio buttons en vertical */
+/* ====== RADIO Y PAGO ====== */
 .radio-group-vertical {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
-/* Sección de datos de transferencia */
-.datos-transferencia {
-  background-color: #ffe8d9;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.metodo-pago-bloque {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #fff2e6;
+  border-radius: 8px;
 }
 
-.datos-transferencia label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.9rem;
-}
-
-/* Botón "Finalizar Entrega" */
+/* ====== BOTONES ====== */
 .btn-finalizar {
-  background-color: #8b4513; /* Café */
+  background-color: #8b4513;
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -185,13 +210,9 @@
   cursor: pointer;
   font-size: 0.9rem;
 }
-
 .btn-finalizar:hover {
   background-color: #a25a1b;
 }
-
-
-/* Botón Cerrar */
 .detalle-botones {
   display: flex;
   justify-content: flex-end;
@@ -209,19 +230,43 @@
   background-color: #bbb;
 }
 
-/* ====== Responsive para pantallas pequeñas ====== */
+/* ====== BÚSQUEDA ====== */
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  width: 100%;
+}
+.search-container input {
+  width: 300px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
+  transition: border 0.2s ease-in-out;
+}
+.search-container input::placeholder {
+  color: #888;
+}
+.search-container input:focus {
+  border: 1px solid #93572d;
+}
+
+/* ====== RESPONSIVE ====== */
 @media (max-width: 600px) {
   .detail-card {
     gap: 0.8rem;
     font-size: 0.95rem;
   }
-
   .encabezado-detalle {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.3rem;
   }
-
   .fila-detalle {
     flex-direction: column;
     align-items: flex-start;

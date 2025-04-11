@@ -7,7 +7,7 @@ padding: 0 5px;
 `;
 
 //Parametros que recibe el componente
-//nombre: Ruta de la imagen
+//src: Ruta de la imagen
 //tamaño: Tamaño de la imagen
 
 export default Icon;

@@ -91,8 +91,8 @@ router.put('/:id', async (req, res) => {
 
     //campos actualizables
     const camposPermitidos = {
-      generales: ['nombre', 'descripcion', 'precio', 'stock'],
-      anidados: ['proveedor', 'historialInventario']
+      generales: ['nombre', 'descripcion', 'precio', 'stock', 'proveedor'],
+      anidados: [ 'historialInventario']
     };
 
     // Actualizar campos generales
@@ -102,14 +102,6 @@ router.put('/:id', async (req, res) => {
       }
     });
 
-    // Actualizar proveedor 
-    if (req.body.proveedor) {
-      producto.proveedor = {
-        ...producto.proveedor.toObject(),
-        ...req.body.proveedor
-      };
-      delete producto.proveedor._id; // Eliminar ID existente para evitar conflicto
-    }
 
     // nuevos registros al historial
     if (req.body.historialInventario) {
@@ -196,6 +188,41 @@ router.delete('/:id', async (req, res) => {
       success: false,
       error: 'Error al eliminar: ' + error.message
     });
+  }
+});
+
+
+router.post('/registrar-entrada', async (req, res) => {
+  try {
+    const { productoId, cantidad, usuarioId, motivo, solicitudId } = req.body;
+
+    const producto = await Producto.findOne({ productoId });
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+
+    // Crear entrada en el historial
+    const nuevoMovimiento = {
+      cantidad,
+      tipoMovimiento: 'Entrada',
+      motivo,
+      usuarioId,
+      fechaMovimiento: new Date()
+    };
+
+    producto.stock += cantidad;
+    producto.historialInventario.push(nuevoMovimiento);
+    await producto.save();
+
+    // Si viene una solicitudId, actualizarla
+    if (solicitudId) {
+      await SolicitudProducto.findOneAndUpdate(
+        { solicitudId },
+        { estado: 'Recibido' }
+      );
+    }
+
+    res.status(200).json({ success: true, message: 'Entrada registrada y solicitud actualizada', producto });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al registrar entrada', detalles: error.message });
   }
 });
 

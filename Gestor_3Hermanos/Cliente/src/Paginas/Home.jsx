@@ -6,13 +6,19 @@ import Header from "../Componentes/Header";
 import MainContainer from "../Componentes/MainContainer";
 import SubTittle from "../Componentes/SubTitle";
 import Button from "../Componentes/Button";
+import {Table,Td,Th,Tr}from"../Componentes/Table";
+import EstadoVisual from "../Componentes/EstadoVisual";
+import productoIcon from "../Componentes/Iconos/productoIcon.png";
+import vermasIcon from "../Componentes/Iconos/details.png";
+import pricelcon from "../Componentes/Iconos/priceIcon.png";
+import nuevoPedido from "../Componentes/Iconos/nuevoPedido.png";
 
 // --------------------- ESTILOS ---------------------
 const TopSection = styled.div`
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
-  background-color: #f9f4ee;
+ 
 `;
 
 const SmallTableContainer = styled.div`
@@ -20,6 +26,7 @@ const SmallTableContainer = styled.div`
   border: 1px solid #ccc;
   padding: 16px;
   border-radius: 8px;
+  background-color: #f9f4ee;
 `;
 
 const LargeTableContainer = styled.div`
@@ -28,24 +35,6 @@ const LargeTableContainer = styled.div`
   border-radius: 8px;
   background-color: #f9f4ee;
 `;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-`;
-
-const TableHeader = styled.th`
-  border-bottom: 2px solid #000;
-  text-align: left;
-  padding: 8px;
-`;
-
-const TableData = styled.td`
-  border-bottom: 1px solid #ccc;
-  padding: 8px;
-`;
-
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -64,6 +53,8 @@ const ModalContent = styled.div`
   width: 400px;
   border-radius: 10px;
 `;
+
+
 // --------------------------------------------------
 
 function Home() {
@@ -111,7 +102,7 @@ function Home() {
       try {
         const response = await fetch("http://localhost:3000/api/usuarios");
         if (!response.ok) {
-          throw new Error(`Error al obtener usuarios. Status: ${response.status}`);
+          throw new Error("Error al obtener usuarios. Status: ${response.status}");
         }
         const result = await response.json();
         console.log("Respuesta de usuarios:", result);
@@ -147,7 +138,7 @@ function Home() {
       try {
         const response = await fetch("http://localhost:3000/api/Pedidos");
         if (!response.ok) {
-          throw new Error(`Error al obtener pedidos. Status: ${response.status}`);
+          throw new Error("Error al obtener pedidos. Status: ${response.status}");
         }
         const data = await response.json();
         // Asumimos que 'data' es el array de pedidos
@@ -184,22 +175,29 @@ function Home() {
       <TopSection>
         {/* Tabla de Productos Disponibles */}
         <SmallTableContainer>
-          <SubTittle stitle="Productos Disponibles" />
+          <SubTittle stitle="Productos Disponibles" 
+ ancho="Completo"
+icono={productoIcon}
+  setButton={true}
+  btnIcon={vermasIcon}
+ buttonText={"Ver mas>"}
+ onClick={() => navigate('/Inventario')}
+ />
           <Table>
             <thead>
-              <tr>
-                <TableHeader>Producto</TableHeader>
-                <TableHeader>Stock</TableHeader>
-                <TableHeader>Costo/Kg</TableHeader>
-              </tr>
+              <Tr>
+                <Th>Producto</Th>
+                <Th>Stock</Th>
+                <Th>Costo/Kg</Th>
+              </Tr>
             </thead>
             <tbody>
               {productosDisponibles.map((prod) => (
-                <tr key={prod._id}>
-                  <TableData>{prod.nombre}</TableData>
-                  <TableData>{prod.stock} kg</TableData>
-                  <TableData>${prod.precio}</TableData>
-                </tr>
+                <Tr key={prod._id}>
+                  <Td>{prod.nombre}</Td>
+                  <Td>{prod.stock} kg</Td>
+                  <Td>${prod.precio}</Td>
+                </Tr>
               ))}
             </tbody>
           </Table>
@@ -207,26 +205,34 @@ function Home() {
 
         {/* Tabla de Movimientos de Caja (últimos 2 movimientos) */}
         <SmallTableContainer>
-          <SubTittle stitle="Movimientos de Caja" />
+          <SubTittle stitle="Movimientos de Caja" 
+           ancho="Completo"
+           icono={pricelcon}
+             setButton={true}
+             btnIcon={vermasIcon}
+            buttonText={"Ver mas>"}
+            onClick={() => navigate('/Caja')}
+          
+          />
           <Table>
             <thead>
-              <tr>
-                <TableHeader>#Referencia</TableHeader>
-                <TableHeader>Motivo</TableHeader>
-                <TableHeader>Monto</TableHeader>
-                <TableHeader>Fecha/Hora</TableHeader>
-              </tr>
+              <Tr>
+                <Th>#Referencia</Th>
+                <Th>Motivo</Th>
+                <Th>Monto</Th>
+                <Th>Fecha/Hora</Th>
+              </Tr>
             </thead>
             <tbody>
               {movimientosCaja.map((mov) => (
-                <tr key={mov.cajaId}>
-                  <TableData>{mov.referencia}</TableData>
-                  <TableData>{mov.motivo}</TableData>
-                  <TableData>${mov.monto}</TableData>
-                  <TableData>
+                <Tr key={mov.cajaId}>
+                  <Td>{mov.referencia}</Td>
+                  <Td>{mov.motivo}</Td>
+                  <Td>${mov.monto}</Td>
+                  <Td>
                     {mov.fechaHora ? new Date(mov.fechaHora).toLocaleString() : ""}
-                  </TableData>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
           </Table>
@@ -235,35 +241,37 @@ function Home() {
 
       {/* Tabla grande de Pedidos */}
       <LargeTableContainer>
-        <SubTittle stitle="Pedidos" />
-        <Button variant="primary" size="large" style={{ margin: "10px 0" }} onClick={() => navigate('/gestion-pedidos')}>
-          Generar Pedido
-        </Button>
+        <SubTittle stitle="Pedidos" 
+        ancho="Completo"
+        icono={nuevoPedido}
+          setButton={true}
+          btnIcon={vermasIcon}
+         buttonText={"Ver mas>"}
+         onClick={() => navigate('/gestion-pedidos')}
+       
+        />
+
         <Table>
           <thead>
-            <tr>
-              <TableHeader># Pedido</TableHeader>
-              <TableHeader>Estado</TableHeader>
-              <TableHeader>Productos</TableHeader>
-              <TableHeader>Fecha y Hora</TableHeader>
-              <TableHeader>Total</TableHeader>
-            </tr>
+            <Tr>
+              <Th># Pedido</Th>
+              <Th>Cliente</Th>
+              <Th>Estado</Th>
+              <Th>Total</Th>
+              <Th>Fecha</Th> 
+            </Tr>
           </thead>
           <tbody>
-            {pedidos.map((p) => (
-              <tr key={p._id}>
-                <TableData>{p.pedidoId}</TableData>
-                <TableData>{p.estado}</TableData>
-                <TableData>
-                  <Button onClick={() => handleConsultar(p)}>
-                    Consultar
-                  </Button>
-                </TableData>
-                <TableData>
-                  {p.fecha ? new Date(p.fecha).toLocaleString() : ""}
-                </TableData>
-                <TableData>${p.total}</TableData>
-              </tr>
+            {pedidos.map(pedido =>(<Tr key={pedido.pedidoId} onClick={()=>setSelectedPedido(pedido)}
+              className={selectedPedido?.pedidoId===pedido.pedidoId?"selected":""}
+              >
+                <Td>{pedido.pedidoId}</Td>
+                <Td>{pedido.cliente}</Td>
+                <EstadoVisual estado={pedido.estado}/><Td>$
+            {pedido.total?.toFixed(2)}</Td>
+            <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
+                
+              </Tr>
             ))}
           </tbody>
         </Table>
@@ -275,7 +283,7 @@ function Home() {
           <ModalContent>
             <h3>Detalles del Pedido</h3>
             <p><strong>Pedido ID:</strong> {selectedPedido.pedidoId}</p>
-            <p><strong>Estado:</strong> {selectedPedido.estado}</p>
+            <p><strong>Estado:</strong> {selectedPedido.EstadoVisual}</p>
             <p>
               <strong>Fecha:</strong>{" "}
               {selectedPedido.fecha

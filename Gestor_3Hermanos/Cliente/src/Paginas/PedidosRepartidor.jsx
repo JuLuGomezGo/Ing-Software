@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PedidosRepartidorC from "../Componentes/PedidosRepartidorC";
-import "./PedidosRepartidor.css"; // Tus estilos globales o de la página
+import "./PedidosRepartidor.css";
 import HeaderRepartidor from "../Componentes/HeaderRepartidor";
 import SearchBar from "../Componentes/Search";
 import MainContainer from "../Componentes/MainContainer";
+import IconMap from "../Componentes/Iconos/map.png";
 
 function PedidosRepartidor() {
   const [busqueda, setBusqueda] = useState("");
@@ -19,14 +20,16 @@ function PedidosRepartidor() {
         const data = await response.json();
         setPedidos(data);
       } catch (error) {
-        console.error("Error fetching orders:", error);
+        console.error("Error al obtener pedidos:", error);
       }
     };
 
     fetchPedidos();
   }, []);
 
-  // Mapeamos la estructura del backend
+  const normalizar = (texto) =>
+    texto?.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
   const pedidosMapeados = pedidos.map((p) => ({
     id: p.pedidoId,
     direccion: p.direccionEntrega,
@@ -38,10 +41,13 @@ function PedidosRepartidor() {
     metodoPago: p.metodoPago,
   }));
 
-  // Filtra los pedidos por la dirección
-  const pedidosFiltrados = pedidosMapeados.filter((pedido) =>
-    pedido.direccion?.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const pedidosFiltrados = pedidosMapeados.filter((pedido) => {
+    const filtro = normalizar(busqueda);
+    return (
+      normalizar(pedido.direccion).includes(filtro) ||
+      normalizar(pedido.nombreCliente).includes(filtro)
+    );
+  });
 
   return (
     <MainContainer>

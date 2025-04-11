@@ -39,13 +39,17 @@ router.post('/', async (req, res) => {
     if (!producto) {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
+    if (!productoId || !proveedorId || !cantidad || !estado) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios en la solicitud' });
+    }
+
 
     const nuevaSolicitud = new SolicitudProducto({
       productoId,
       proveedorId,
       cantidad,
       estado,
-      fechaSolicitud: new Date() // se puede omitir, ya se establece por defecto
+      fechaSolicitud: new Date() 
     });
 
     await nuevaSolicitud.save();
@@ -101,5 +105,6 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar solicitud', detalles: error.message });
   }
 });
+
 
 export default router;
