@@ -282,31 +282,37 @@ function GestionUsuarios() {
                 </DropBox>
               </div>
             </FormRow>
+                      {/* Fila 2: Contraseña / Correo */}
+                      <FormRow>
+            <div style={{ flex: 1 }}>
+              <Label>{editMode ? "Nueva Contraseña:" : "Contraseña:"}</Label>
+              <TextBox
+                type="text"
+                placeholder={
+                  editMode ? "Nueva Contraseña" : "Contraseña del trabajador"
+                }
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
+              />
+            </div>
 
-            {/* Fila 2: Contraseña / Correo */}
-            <FormRow>
-              <div style={{ flex: 1 }}>
-                <Label>{editMode ? "Nueva Contraseña:" : "Contraseña:"}</Label>
-                <TextBox
-                  type="text"
-                  placeholder={
-                    editMode ? "Nueva Contraseña" : "Contraseña del trabajador"
-                  }
-                  value={contrasena}
-                  onChange={(e) => setContrasena(e.target.value)}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Label>Correo:</Label>
-                <TextBox
-                  type="email"
-                  placeholder="Dirección de Correo Electrónico"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                />
-              </div>
-            </FormRow>
-
+            <div style={{ flex: 1 }}>
+              <Label>Correo:</Label>
+              <TextBox
+                type="email"
+                placeholder="Dirección de Correo Electrónico"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                disabled={editMode} // ← Aquí se desactiva el campo si estás en modo edición
+                title={
+                  editMode
+                    ? "No puedes modificar el correo electrónico en modo edición"
+                    : ""
+                } // ← Tooltip opcional para mayor claridad
+              />
+            </div>
+          </FormRow>
+          
             {/* Fila 3: Botón */}
             <FormRow>
               <Button variant="primary" type="submit">

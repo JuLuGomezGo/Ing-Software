@@ -47,14 +47,20 @@ const usuarioSchema = new mongoose.Schema({
   },
   contraseña: {
     type: String,
-    required: [true, 'La contraseña es requerida']
+    required: [true, 'La contraseña es requerida'],
+    validate: {
+      validator: function (v) {
+        return v.toString().length <= 8;
+      },
+      message: 'La contraseña no puede exceder los 8 caracteres'
+    }
   },
   rol: {
     type: String,
     required: [true, 'El rol es requerido'],
     enum: {
       values: ['Gerente', 'Empleado', 'Repartidor'],
-      message: 'Rol no válido. Valores permitidos: Gerente, Empleado'
+      message: 'Rol no válido. Valores permitidos: Gerente, Empleado, Repartidor'
     }
   },
   correo: {
@@ -71,6 +77,7 @@ const usuarioSchema = new mongoose.Schema({
   collection: 'usuarios',
   timestamps: true
 });
+
 const generarIdUnico = async (campo) => {
   let id;
   let contador = 0;
@@ -90,7 +97,6 @@ const generarIdUnico = async (campo) => {
   return id;
 };
 
-// Generar IDs antes de guardar
 usuarioSchema.pre('save', async function (next) {
   try {
     if (!this.usuarioId) {
@@ -109,8 +115,6 @@ usuarioSchema.pre('save', async function (next) {
   }
 });
 
-
-// // Ocultar contraseña en las respuestas
 usuarioSchema.methods.toJSON = function () {
   const usuario = this.toObject();
   delete usuario.contraseña;
@@ -118,5 +122,4 @@ usuarioSchema.methods.toJSON = function () {
 };
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
-
 export default Usuario;
