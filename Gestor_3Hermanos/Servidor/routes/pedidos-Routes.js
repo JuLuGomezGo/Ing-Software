@@ -36,11 +36,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Ya existe un pedido con ese ID' });
     }
 
-    // Validar existencia de usuario
-    const usuario = await Usuario.findOne({ usuarioId });
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
+    // // Validar existencia de usuario
+    // const usuario = await Usuario.findOne({ usuarioId });
+    // if (!usuario) {
+    //   return res.status(404).json({ error: 'Usuario no encontrado' });
+    // }
 
     // Validar que haya productos
     if (!productos || productos.length === 0) {
@@ -118,17 +118,17 @@ router.get('/:id/mapa', async (req, res) => {
     if (!pedido) {
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
-
-    const direccionCodificada = encodeURIComponent(pedido.direccionEntrega);
+    const direccionCompleta = `${pedido.direccionEntrega}, Nayarit, México`;
+    const direccionCodificada = encodeURIComponent(direccionCompleta);
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${direccionCodificada}`;
-
     res.json({
-      direccion: pedido.direccionEntrega,
+      direccion: direccionCompleta,
       googleMapsUrl
     });
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener la dirección', detalles: error.message });
   }
 });
+
 
 export default router;

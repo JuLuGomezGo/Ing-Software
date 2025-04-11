@@ -11,8 +11,8 @@ import Button from "../Componentes/Button";
 import SubTitle from "../Componentes/SubTitle";
 import { DateBox, TimeBox } from '../Componentes/Date-TimePicker';
 import { TextBox, TextArea } from '../Componentes/TextComponent';
-import backIcon from "../Componentes/Iconos/back.png";
-import nuevPedido from "../Componentes/Iconos/nuevoPedido.png";
+//import backIcon from "../Componentes/Iconos/back.png";
+//import nuevPedido from "../Componentes/Iconos/nuevoPedido.png";
 import DropBox from "../Componentes/DropBox";
 
 const Container = styled.div`
@@ -47,7 +47,7 @@ function GestionPedidos() {
     });
     const [items, setItems] = useState([{
         productoId: '',
-        cantidad: 1,
+        cantidad: 0,
         precioUnitario: 0,
         nombre: '',
         subtotal: 0
@@ -127,11 +127,11 @@ function GestionPedidos() {
         setIsLoading(true);
 
         // Validaciones
-        if (!formData.cliente || !formData.direccionEntrega || !formData.telefono) {
-            toast.error('Complete todos los datos del cliente');
-            setIsLoading(false);
-            return;
-        }
+        // if (!formData.cliente || !formData.direccionEntrega || !formData.telefono) {
+        //     toast.error('Complete todos los datos del cliente');
+        //     setIsLoading(false);
+        //     return;
+        // }
 
         if (items.some(item => Number(item.productoId) <= 0 || item.cantidad <= 0)) {
             toast.error('Complete correctamente todos los productos');
@@ -175,7 +175,7 @@ function GestionPedidos() {
             // Resetear formulario
             setItems([{
                 productoId: '',
-                cantidad: 1,
+                cantidad: 0,
                 precioUnitario: 0,
                 nombre: '',
                 subtotal: 0
@@ -233,7 +233,7 @@ function GestionPedidos() {
 
                                 <TextBox
                                     type="number"
-                                    min="1"
+                                    min="0"
                                     step="0.1"
                                     value={item.cantidad}
                                     onChange={(e) => handleItemChange(index, 'cantidad', e.target.value)}
