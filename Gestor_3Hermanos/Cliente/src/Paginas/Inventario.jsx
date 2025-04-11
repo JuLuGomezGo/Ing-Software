@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import styled from 'styled-components';
+import { useNavigate } from "react-router-dom";
 
 // Componentes Basicos
 import { Table, Th, Td, Tr } from '../Componentes/Table';
@@ -24,6 +25,7 @@ import editIcon from '../Componentes/Iconos/edit.png';
 import stockIcon from '../Componentes/Iconos/stock.png';
 import historyIcon from '../Componentes/Iconos/history.png';
 import deleteIcon from '../Componentes/Iconos/delete.png';
+import proveedorIcon from "../Componentes/Iconos/proveedorIcon.png";
 
 
 // Estilos principales
@@ -85,6 +87,7 @@ const ActionButtons = styled.div`
 
 // Componente principal
 function GestionInventario() {
+    const navigate = useNavigate();
 
     // Estado para el producto seleccionado
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -235,9 +238,6 @@ function GestionInventario() {
 
 
 
-
-    // ACTUALIZAR STOCK
-    // Función para agregar stock con todas las validaciones
     const handleAgregarStock = async (productoId, cantidad, usuarioId) => {
         try {
             // 1. Buscar producto actual en el estado
@@ -303,9 +303,15 @@ function GestionInventario() {
                     </SearchBar>
 
                     <FilterSection>
-                        <Button size="medium" variant="secondary">Filtros</Button>
-                        <Button size="medium" variant="primary" onClick={() => openModal("nuevo")}>
+                        <Button size="medium" >Filtros</Button>
+                        <Button size="medium" onClick={() => openModal("nuevo")}>
                             <Icon src={addIcon} /> Nuevo Producto
+                        </Button>
+                        <Button >
+                            <Icon src={historyIcon} /> Solicitudes
+                        </Button>
+                        <Button onClick={() => navigate('/gestion-proveedores')}>
+                            <Icon src={proveedorIcon} />Proveedores
                         </Button>
 
 
@@ -373,7 +379,7 @@ function GestionInventario() {
                                     setProductoEnModal(selectedProduct);
                                     openModal("agregarStock")
                                 }}>
-                                    <Icon src={stockIcon} /> Agregar Stock
+                                    <Icon src={stockIcon} /> Mov. Stock
                                 </Button>
                                 <Button size="medium" variant="danger" onClick={() => {
                                     if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {

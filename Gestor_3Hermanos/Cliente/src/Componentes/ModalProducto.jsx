@@ -81,7 +81,30 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
         descripcion: "",
         precio: "",
         stock: "",
+        tipoMovimiento: "Entrada",
+        motivoMovimiento: "Compra"
     });
+
+
+
+    const tiposMovimiento = [
+        { value: "Entrada", label: "Entrada de Stock" },
+        { value: "Salida", label: "Salida de Stock" }
+    ];
+
+    const motivosMovimiento = {
+        Entrada: [
+            { value: "NuevoProducto", label: "Nuevo Producto" },
+            { value: "ReStock", label: "ReStock" },
+            { value: "Devolucion", label: "Devolución" }
+        ],
+        Salida: [
+            { value: "Venta", label: "Venta a Cliente" },
+            { value: "Merma", label: "Merma/Pérdida" }
+        ]
+    };
+
+
 
     const handleChange = (e) => {
         setProducto({ ...formData, [e.target.name]: e.target.value });
@@ -94,11 +117,15 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 nombre: "",
                 descripcion: "",
                 precio: "",
+                tipoMovimiento: "Entrada",
+                motivoMovimiento: "NuevoProducto",
                 stock: "",
                 proveedor: "",
             });
         }
-        else if (mode === "editar" || mode === "agregarStock") {
+
+
+        else if (mode === "editar") {
             setFormData({
                 productoId: productoSeleccionado.productoId || "",
                 nombre: productoSeleccionado.nombre || "",
@@ -107,201 +134,105 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 stock: mode === "agregarStock" ? "" : productoSeleccionado.stock || "",
                 proveedor: productoSeleccionado.proveedor?.nombre || "",
             });
+        } if (mode === "agregarStock" && productoSeleccionado) {
+            setFormData({
+                productoId: productoSeleccionado.productoId || "",
+                nombre: productoSeleccionado.nombre || "",
+                descripcion: productoSeleccionado.descripcion || "",
+                precio: productoSeleccionado.precio || "",
+                stock: mode === "agregarStock" ? "" : productoSeleccionado.stock || "",
+                tipoMovimiento: "Entrada",
+                motivoMovimiento: "ReStock",
+                stock: "",
+                proveedor: productoSeleccionado.proveedor?.nombre || ""
+            });
         }
     }, [productoSeleccionado, showModal, mode]);
 
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         if (!formData.descripcion || !formData.precio) {
             toast.error("Faltan campos requeridos");
             return;
         }
-    
+
         if (mode === "nuevo") {
-            const proveedor = await seleccionarProveedor(formData.proveedor?.nombre); // Esperar el resultado
-    
+            const proveedorId = await seleccionarProveedor(formData.proveedor?.nombre);
+            if (!proveedorId) {
+                toast.error("Proveedor no válido");
+                return;
+            }
             const producto = {
                 productoId: Number(formData.productoId),
                 nombre: formData.nombre,
                 descripcion: formData.descripcion,
                 precio: Number(formData.precio),
                 stock: Number(formData.stock),
-                proveedor: proveedor // Ya tiene el objeto proveedor completo
+                proveedor: formData.proveedorId
             };
-    
+
             onSave(producto);
         } else if (mode === "agregarStock") {
-            formData.stock = Number(formData.stock) + Number(productoSeleccionado.stock);
-    
-            const producto = {
-                productoId: formData.productoId,
-                stock: Number(formData.stock)
+            if (!formData.stock) {
+                toast.error("Debe especificar la cantidad");
+                return;
+            }
+
+            const cantidad = Number(formData.stock);
+            const movimiento = {
+                cantidad: formData.tipoMovimiento === "Salida" ? -cantidad : cantidad,
+                tipoMovimiento: formData.tipoMovimiento,
+                motivo: formData.motivoMovimiento,
+                usuarioId: 1, // Aquí deberías usar el ID del usuario real
+                fechaMovimiento: new Date().toISOString()
             };
-            onSave(producto);
+
+            const productoActualizado = {
+                productold: productoSeleccionado.productold,
+                stock: formData.tipoMovimiento === "Salida"
+                    ? productoSeleccionado.stock - cantidad
+                    : productoSeleccionado.stock + cantidad,
+                historialInventario: [movimiento]
+            };
+
+            onSave(productoActualizado);
+
         } else if (mode === "editar") {
             const producto = {
                 productoId: productoSeleccionado?.productoId,
                 descripcion: formData.descripcion,
                 precio: Number(formData.precio)
             };
-    
+
             console.log("Enviando producto:", producto);
             onSave(producto);
         }
     };
-    
 
 
 
 
-
-
-    // useEffect(() => {
-    //     fetchProveedoresUnicos();
-    //     //     fetchProductosConProveedores();
-    // }, []);
-
-
-    //FETCH DE PROVEEDORES ORIGINALES
-    // const fetchProveedoresUnicos = async () => {
-    //     try {
-    //         const response = await fetch(`http://localhost:3000/api/productos`);
-    //         const result = await response.json();
-
-    //         if (result.success && Array.isArray(result.data)) {
-    //             // Extrae los nombres de los proveedores
-    //             setProveedores(result.data.map(producto => producto.proveedor.nombre));
-    //         } else {
-    //             console.error("El formato de los datos no es el esperado:", result);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error cargando proveedores:", error);
-    //     }
-    // };
-
-
-
-
-
-    // CÓDIGO PARA OBTENER LOS PROVEEDORES DE UN PRODUCTO ESPECÍFICO
-    // const fetchProductosConProveedores = async (productoId) => {
-    //     try {
-    //         const response = await fetch(`http://localhost:3000/api/productos`);
-    //         const result = await response.json();
-
-    //         if (result.success && Array.isArray(result.data)) {
-    //             // Filtramos el producto seleccionado
-    //             const productoSeleccionado = result.data.find(p => p.productoId === productoId);
-
-    //             if (!productoSeleccionado) {
-    //                 console.error("Producto no encontrado");
-    //                 return;
-    //             }
-
-    //             // Extraemos los proveedores (ajustar si el modelo cambia)
-    //             const proveedores = Array.isArray(productoSeleccionado.proveedores)
-    //                 ? productoSeleccionado.proveedores
-    //                 : [productoSeleccionado.proveedor.nombre];
-
-
-    //             console.log("Proveedores del producto:", proveedores);
-    //         } else {
-    //             console.error("Formato de datos inesperado:", result);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error obteniendo proveedores:", error);
-    //     }
-    // };
-    
-    useEffect(() => {
-        const cargarProveedores = async () => {
-            const data = await fetchProveedoresUnicos();
-            if (data) {
-                setProveedores(data);
-            }
-        };
-    
-        cargarProveedores();
-    }, []);
 
     const [proveedores, setProveedores] = useState([]);
+    useEffect(() => {
+        fetchProveedores();
+    }, []);
 
-    const fetchProveedoresUnicos = async () => {
+    const fetchProveedores = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/productos`);
-            const result = await response.json();
-    
-    
+            const res = await fetch("http://localhost:3000/api/proveedores");
+            const result = await res.json();
             if (result.success && Array.isArray(result.data)) {
-                const proveedores = result.data
-                    .filter(producto => producto.proveedor && typeof producto.proveedor === 'object') 
-                    .map(producto => producto.proveedor);
-    
-    
-                const proveedoresUnicos = [];
-                const nombresUnicos = new Set();
-    
-                proveedores.forEach(proveedor => {
-                    if (!nombresUnicos.has(proveedor.nombre)) {
-                        nombresUnicos.add(proveedor.nombre);
-                        proveedoresUnicos.push(proveedor);
-                    }
-                });
-    
-                return proveedoresUnicos;
-            } else {
-                console.error("El formato de los datos no es el esperado:", result);
-                return [];
-            }
-        } catch (error) {
-            console.error("Error cargando proveedores:", error);
-            return [];
-        }
-    };
-    
-    
-
-
-    const fetchProductosConProveedores = async (productoId) => {
-        try {
-            const response = await fetch(`http://localhost:3000/api/productos`);
-            const result = await response.json();
-
-            if (result.success && Array.isArray(result.data)) {
-                // Filtramos el producto por su ID
-                const productoSeleccionado = result.data.find(p => p.productoId === productoId);
-
-                if (!productoSeleccionado) {
-                    console.error("Producto no encontrado");
-                    return;
-                }
-
-                // Extraemos el arreglo de proveedores completos
-                const proveedores = Array.isArray(productoSeleccionado.proveedores)
-                    ? productoSeleccionado.proveedores  // Ahora devuelve el objeto completo
-                    : [];
-
-                return proveedores;
+                setProveedores(result.data); // state
             } else {
                 console.error("Formato de datos inesperado:", result);
             }
-        } catch (error) {
-            console.error("Error obteniendo proveedores:", error);
+        } catch (err) {
+            console.error("Error cargando proveedores:", err);
         }
-    };
-
-    const seleccionarProveedor = async (nombreProveedor) => {
-        const proveedores = await fetchProveedoresUnicos();
-
-        const proveedorSeleccionado = proveedores.find(p => p.nombre === nombreProveedor);
-
-        if (!proveedorSeleccionado) {
-            console.error("Proveedor no encontrado");
-            return null;
-        }
-
-        return proveedorSeleccionado;
     };
 
 
@@ -322,13 +253,13 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     const { title, buttonText, icon } = getModalConfig();
 
     const campos = [
-        { icon: idIcon, label: "Código de Producto", key: "productoId", disabled: ["editar", "agregarStock"] },
+        // { icon: idIcon, label: "Código de Producto", key: "productoId", disabled: ["editar", "agregarStock"] },
         { icon: productoIcon, label: "Producto", key: "nombre", disabled: ["editar", "agregarStock"] },
         { icon: details, label: "Descripción", key: "descripcion", disabled: ["agregarStock"] },
         { icon: priceIcon, label: "Precio", key: "precio", disabled: ["agregarStock"] },
-        { icon: stockIcon, label: mode === "agregarStock" ? "Stock Recibido" : "Stock", key: "stock", disabled: ["editar"] },
+        { icon: stockIcon, label: mode === "agregarStock" ? "Cantidad Kg" : "Stock", key: "stock", disabled: ["editar"] },
     ];
-    
+
 
 
     return (
@@ -352,29 +283,61 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                         />
                     </Label>
                 ))}
+                {mode === "agregarStock" && (
+                    <>
+                        <Label>
+                            <Icon src={stockIcon} /> Tipo de Movimiento
+                            <DropBox
+                                value={formData.tipoMovimiento}
+                                onChange={(e) => {
+                                    setFormData({
+                                        ...formData,
+                                        tipoMovimiento: e.target.value,
+                                        motivoMovimiento: motivosMovimiento[e.target.value][0].value
+                                    });
+                                }}
+                            >
+                                {tiposMovimiento.map((tipo) => (
+                                    <option key={tipo.value} value={tipo.value}>
+                                        {tipo.label}
+                                    </option>
+                                ))}
+                            </DropBox>
+                        </Label>
+
+                        <Label>
+                            <Icon src={details} /> Motivo
+                            <DropBox
+                                value={formData.motivoMovimiento}
+                                onChange={(e) => setFormData({ ...formData, motivoMovimiento: e.target.value })}
+                            >
+                                {motivosMovimiento[formData.tipoMovimiento].map((motivo) => (
+                                    <option key={motivo.value} value={motivo.value}>
+                                        {motivo.label}
+                                    </option>
+                                ))}
+                            </DropBox>
+                        </Label>
+                    </>
+                )}
 
                 <Label>
                     <Icon src={proveedorIcon} /> Proveedor
                     <DropBox
-    disabled={mode === "editar"}
-    name="Proveedor"
-    value={formData.proveedor?.nombre || ""}
-    onChange={(e) => {
-        console.log("Proveedor seleccionado en el DropBox:", e.target.value);
-        const proveedorSeleccionado = proveedores.find(p => p.nombre === e.target.value);
-
-        if (!proveedorSeleccionado) {
-            console.error("Proveedor no encontrado en la lista de proveedores:", proveedores);
-        } else {
-            setFormData({ ...formData, proveedor: proveedorSeleccionado });
-        }
-    }}
->
-    <option value="">Seleccione un proveedor</option>
-    {proveedores.map((proveedor, index) => (
-        <option key={index} value={proveedor.nombre}>{proveedor.nombre}</option>
-    ))}
-</DropBox>
+                        name="proveedorId"
+                        disabled={mode === "editar"}
+                        value={formData.proveedorId || ""}
+                        onChange={(e) =>
+                            setFormData({ ...formData, proveedorId: Number(e.target.value) })
+                        }
+                    >
+                        <option value="">Seleccione un proveedor</option>
+                        {proveedores.map((prov) => (
+                            <option key={prov.proveedorId} value={prov.proveedorId}>
+                                {prov.nombre}
+                            </option>
+                        ))}
+                    </DropBox>
 
 
                 </Label>

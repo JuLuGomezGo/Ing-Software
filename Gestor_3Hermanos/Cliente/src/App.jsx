@@ -11,7 +11,7 @@ import Inventario from './Paginas/Inventario';
 import GestionPedidos from './Paginas/GestionPedidos';
 import Caja from './Paginas/Caja';
 import GestionUsuarios from './Paginas/GestionUsuarios';
-
+import GestionProveedores from './Paginas/GestionProveedores';
 import PedidosRepartidor from './Paginas/PedidosRepartidor';
 import MainContainer from './Componentes/MainContainer';
 
@@ -45,6 +45,7 @@ function App() {
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/caja" element={<Caja />} />
               <Route path="/gestion-pedidos" element={<GestionPedidos />} />
+              <Route path="/gestion-proveedores" element={<GestionProveedores />} />
             </>
           )}
 

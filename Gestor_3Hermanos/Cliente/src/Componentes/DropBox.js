@@ -12,7 +12,6 @@ const DropBox = styled.select`
   transition: all 0.3s ease;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  appearance: none;
 
   &:hover {
     background-color: #f1e9df;

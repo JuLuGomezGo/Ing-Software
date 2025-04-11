@@ -1,48 +1,30 @@
 import mongoose from 'mongoose';
+import SolicitudProducto from '../models/SolicitudProducto-Model.js';
+
+
+
 // Registrar modelos auxiliares primero
 const generarIdUnico = async (modelName, campoId) => {
   let id;
   let contador = 0;
-  let existe;  
-  
+  let existe;
+
   do {
     id = Math.floor(1000 + Math.random() * 9000);
     contador++;
-    
+
     if (contador > 100) {
       throw new Error('No se pudo generar un ID único después de 100 intentos');
     }
-    
+
     const Model = mongoose.model(modelName);
     existe = await Model.exists({ [campoId]: id });  // Sin declaración
-    
+
   } while (existe);  // Ahora está accesible
 
   return id;
 };
 
-// modelo de Proveedor
-const proveedorSchema = new mongoose.Schema({
-  proveedorId: {
-    type: Number,
-    required: true,
-    validate: (v) => /^\d{4}$/.test(v.toString())
-  },
-  nombre: { type: String, required: true },
-  contacto: { type: String, required: true },
-  email: { type: String, required: true },
-  direccion: { type: String, required: true }
-});
-
-proveedorSchema.pre('save', async function(next) {
-  if (!this.proveedorId) {
-    this.proveedorId = await generarIdUnico('Proveedor', 'proveedorId');
-  }
-  next();
-});
-
-// const Proveedor = mongoose.model('Proveedor', proveedorSchema);
-// const HistorialInventario = mongoose.model('HistorialInventario', historialInventarioSchema);
 
 // Modelo de HistorialInventario
 const historialInventarioSchema = new mongoose.Schema({
@@ -52,12 +34,21 @@ const historialInventarioSchema = new mongoose.Schema({
     validate: (v) => /^\d{4}$/.test(v.toString())
   },
   cantidad: { type: Number, required: true },
-  tipoMovimiento: { type: String, required: true },
+  tipoMovimiento: {
+    type: String,
+    enum: ['Entrada de Stock', 'Salida de Stock'],
+    required: true
+  },
+  motivo: {
+    type: String,
+    enum: ['Nuevo Producto', 'ReStock', 'Merma/Pérdida', 'Venta a Cliente', 'Devolución'],
+    required: true
+  },
   fechaMovimiento: { type: Date, default: Date.now },
   usuarioId: { type: Number, required: true }
 });
 
-historialInventarioSchema.pre('save', async function(next) {
+historialInventarioSchema.pre('save', async function (next) {
   if (!this.historialId) {
     this.historialId = await generarIdUnico('HistorialInventario', 'historialId');
   }
@@ -76,21 +67,21 @@ const productoSchema = new mongoose.Schema({
   descripcion: { type: String, required: true },
   precio: { type: Number, required: true },
   stock: { type: Number, required: true },
-  proveedor: proveedorSchema,
+  proveedor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Proveedor',
+    required: true
+  },
   historialInventario: [historialInventarioSchema]
-}, { 
+}, {
   timestamps: true,
   collection: 'productos'
 });
 
-productoSchema.pre('save', async function(next) {
+productoSchema.pre('save', async function (next) {
   try {
     if (!this.productoId) {
       this.productoId = await generarIdUnico('Producto', 'productoId');
-    }
-
-    if (this.proveedor && !this.proveedor.proveedorId) {
-      this.proveedor.proveedorId = await generarIdUnico('Proveedor', 'proveedorId');
     }
 
     if (this.historialInventario) {
@@ -100,35 +91,14 @@ productoSchema.pre('save', async function(next) {
         }
       }
     }
-    
+
     next();
   } catch (error) {
     next(error);
   }
 });
-////////////////////////////////////////////////////////
-//Implementacion del contador.
-productoSchema.pre('save', async function(next) {
-  try {
-    if (!this.productoId) {
-      this.productoId = await generarId('Producto');
-    }
 
-    if (this.proveedor && !this.proveedor.proveedorId) {
-      this.proveedor.proveedorId = await generarId('Proveedor');
-    }
 
-    for (const historial of this.historialInventario) {
-      if (!historial.historialId) {
-        historial.historialId = await generarId('HistorialInventario');
-      }
-    }
-
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
 
 const Producto = mongoose.model('Producto', productoSchema);
 
