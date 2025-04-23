@@ -26,6 +26,16 @@ const cajaSchema = new mongoose.Schema({
   fechaHora: {
     type: Date,
     default: Date.now
+  },
+  producto: {
+    type: String,
+    required: [true, 'El producto es requerido'],
+    maxlength: [100, 'El nombre del producto no puede exceder 100 caracteres']
+  },
+  nombreProveedorCliente: {
+    type: String,
+    required: [true, 'El nombre del cliente/proveedor es requerido'],
+    maxlength: [100, 'El nombre no puede exceder 100 caracteres']
   }
 });
 
