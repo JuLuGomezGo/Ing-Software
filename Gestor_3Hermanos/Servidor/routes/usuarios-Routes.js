@@ -1,5 +1,10 @@
 import express from 'express';
 import Usuario from '../models/Usuario-Model.js';
+import Pedido from '../models/Pedido-Model.js';
+import Producto from '../models/Producto-Model.js';
+
+
+
 
 const router = express.Router();
 
@@ -239,4 +244,45 @@ router.post('/login', async (req, res) => {
 });
 ///////////////////////////fin de kevin
 
+
+
+
+//obtener pedidos y productos por ID
+router.get('/caja/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Primero buscamos si el ID corresponde a un pedido
+    const pedido = await Pedido.findOne({ pedidoId: Number(id) });
+    if (pedido) {
+      return res.json({
+        referencia: pedido.pedidoId,
+        motivo: "Cobro Pedido",
+        nombreProveedorCliente: pedido.cliente,
+        producto: pedido.productos?.[0]?.nombre || "",
+        monto: pedido.total
+      });
+    }
+
+    // Si no es pedido, probamos si es un producto
+    const producto = await Producto.findOne({ productoId: Number(id) }).populate('proveedor');
+    if (producto) {
+      return res.json({
+        referencia: producto.productoId,
+        motivo: "Pago a Proveedor",
+        nombreProveedorCliente: producto.proveedor?.nombre || "",
+        producto: producto.nombre,
+        monto: producto.precio
+      });
+    }
+
+    // Si no se encontró en pedidos ni productos
+    return res.status(404).json({ message: 'No se encontró ni pedido ni producto con ese ID' });
+  } catch (error) {
+    console.error("Error en búsqueda de ID:", error);
+    return res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+//
 export default router;

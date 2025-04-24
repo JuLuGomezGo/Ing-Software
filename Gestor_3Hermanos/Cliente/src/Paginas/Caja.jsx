@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-
 import Header from "../Componentes/Header";
 import MainContainer from "../Componentes/MainContainer";
 import Button from "../Componentes/Button";
@@ -8,9 +7,31 @@ import { Table, Th, Td } from "../Componentes/Table";
 import DropBox from "../Componentes/DropBox";
 import { TextBox } from "../Componentes/TextComponent";
 import { DateBox, TimeBox } from '../Componentes/Date-TimePicker';
-import SubTitulo from "../Componentes/SubTitle";
-import Icon from "../Componentes/Icon";
-import backIcon from "../Componentes/Iconos/back.png";
+import { jsPDF } from "jspdf";
+
+// Estilos para el contenedor lateral (drawer)
+const Sidebar = styled.div`
+  position: fixed;
+  top: 125px;
+  right: ${(props) => (props.isOpen ? "0" : "-600px")}; /* Cambia a -300px si también aumentas el ancho */
+  width: 300px; /* Aumenta el ancho del menú lateral */
+  height: 100%;
+  background-color: #f9f4ee;
+  border-left: 2px solid #b3815d;
+  padding: 1rem;
+  transition: 0.3s ease;
+  z-index: 1000;
+`;
+
+
+const SidebarButton = styled(Button)`
+  
+  top: 160px;
+  right: 410px;
+  z-index: 1001;
+  background-color: #b3815d;
+  color: white;
+`;
 
 const Container = styled.div`
   border: 2px solid #b3815d;
@@ -31,12 +52,6 @@ const Label = styled.label`
   gap: 0.5rem;
 `;
 
-const FlexRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-`;
-
 const Cont_lbl = styled.div`
   display: flex;
   flex-direction: column;
@@ -46,55 +61,6 @@ const Cont_inputs = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ModalContent = styled.div`
-  background: #f9f4ee;
-  border: 4px dashed #b3815d;
-  padding: 1.5rem;
-  gap: 1rem;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-`;
-
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  border-bottom: 1px solid #b3815d;
-  padding-bottom: 0.5rem;
-`;
-
-const DateContainer = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const VolverBtn = styled.a`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: end;
-  margin: fit-content;
-  padding: 10px;
-  text-decoration: none;
-  color: #8B572A;
-  cursor: pointer;
 `;
 
 const Caja = () => {
@@ -112,7 +78,9 @@ const Caja = () => {
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -127,6 +95,9 @@ const Caja = () => {
       date: formattedDate,
       time: formattedTime
     }));
+
+    setFechaInicio(formattedDate);
+    setFechaFin(formattedDate);
   }, []);
 
   const handleInputChange = (e) => {
@@ -135,29 +106,30 @@ const Caja = () => {
   };
 
   const obtenerDatosPedido = async () => {
-    if (!formData.pedidoId) {
-      alert("Por favor ingresa un ID de pedido.");
+    const id = formData.pedidoId;
+
+    if (!id) {
+      alert("Por favor ingresa un ID de pedido o producto.");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/usuarios/${formData.pedidoId}`);
-      if (!response.ok) throw new Error("No se encontró el pedido");
+      const response = await fetch(`http://localhost:3000/api/usuarios/caja/${id}`);
+      if (!response.ok) throw new Error("No se encontró el pedido o producto");
 
-      const result = await response.json();
-      const pedido = result.data;
+      const movimiento = await response.json();
 
-      setFormData({
-        ...formData,
-        amount: pedido.total || "",
-        reason: pedido.tipo === "venta" ? "Cobro Pedido" : "Pago de proveedor",
-        nombreProveedorCliente: pedido.nombreProveedorCliente || "",
-        producto: pedido.producto || "",
-      });
-
+      setFormData(prev => ({
+        ...prev,
+        amount: movimiento.monto || "",
+        reason: movimiento.motivo || "",
+        reference: id,
+        nombreProveedorCliente: movimiento.nombreProveedorCliente || "",
+        producto: movimiento.producto || "",
+      }));
     } catch (error) {
-      console.error("Error al obtener pedido:", error);
-      alert("No se pudo obtener el pedido.");
+      console.error("Error al obtener los datos:", error);
+      alert("No se pudo obtener el pedido o producto.");
     }
   };
 
@@ -217,6 +189,39 @@ const Caja = () => {
     }
   };
 
+  const generarPDF = () => {
+    const doc = new jsPDF();
+
+    const movimientosFiltrados = movimientosCaja.filter(mov => {
+      const fecha = new Date(mov.fechaHora).toISOString().split("T")[0];
+      return fecha >= fechaInicio && fecha <= fechaFin;
+    });
+
+    doc.setFontSize(16);
+    doc.text("Movimientos de Caja", 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Desde: ${fechaInicio}  Hasta: ${fechaFin}`, 14, 28);
+
+    let y = 40;
+    movimientosFiltrados.forEach((mov, index) => {
+      doc.text(`Usuario: ${mov.usuario}`, 14, y);
+      doc.text(`Referencia: ${mov.referencia}`, 14, y + 6);
+      doc.text(`Motivo: ${mov.motivo}`, 14, y + 12);
+      doc.text(`Proveedor/Cliente: ${mov.nombreProveedorCliente}`, 14, y + 18);
+      doc.text(`Producto: ${mov.producto}`, 14, y + 24);
+      doc.text(`Monto: $${mov.monto}`, 14, y + 30);
+      doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 14, y + 36);
+      y += 48;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("C:/movimientos-caja.pdf");
+  };
+
   useEffect(() => {
     const fetchCajaMovimientos = async () => {
       try {
@@ -247,14 +252,22 @@ const Caja = () => {
     <MainContainer>
       <Header />
       <Container>
-        <Cont_lbl>
-          <Label>📅 Fecha: <DateBox value={date} readOnly /></Label>
-          <Label>⏰ Hora: <TimeBox value={time} readOnly /></Label>
-        </Cont_lbl>
+        <SidebarButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          ☰ Filtrar Rango
+        </SidebarButton>
+        <Sidebar isOpen={isSidebarOpen}>
+          <Cont_lbl>
+            <Label>📅 Fecha: <DateBox value={date} readOnly /></Label>
+            <Label>⏰ Hora: <TimeBox value={time} readOnly /></Label>
+            <Label>📆 Desde: <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} /></Label>
+            <Label>📆 Hasta: <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} /></Label>
+            <Button onClick={generarPDF}>📄 Exportar PDF por Rango</Button>
+          </Cont_lbl>
+        </Sidebar>
 
         <Cont_inputs>
           <Label>
-            ID Pedido:
+            ID Pedido o Producto:
             <TextBox
               name="pedidoId"
               value={formData.pedidoId}
@@ -266,7 +279,7 @@ const Caja = () => {
                   reference: value,
                 }));
               }}
-              placeholder="ID del Pedido"
+              placeholder="ID del Pedido o Producto"
             />
             <Button onClick={obtenerDatosPedido}>🔍 Obtener datos</Button>
           </Label>
@@ -279,7 +292,7 @@ const Caja = () => {
             <DropBox name="reason" value={formData.reason} onChange={handleInputChange}>
               <option value="Default">Seleccionar</option>
               <option value="Cobro Pedido">Cobro Pedido</option>
-              <option value="Pago de proveedor">Pago de proveedor</option>
+              <option value="Pago a Proveedor">Pago a Proveedor</option>
             </DropBox>
           </Label>
           <Label>
@@ -298,7 +311,7 @@ const Caja = () => {
           <thead>
             <tr>
               <Th>Usuario</Th>
-              <Th>ID Pedido</Th>
+              <Th>ID</Th>
               <Th>Motivo</Th>
               <Th>Cliente / Proveedor</Th>
               <Th>Producto</Th>
