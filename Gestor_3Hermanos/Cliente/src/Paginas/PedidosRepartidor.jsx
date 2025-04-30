@@ -18,6 +18,9 @@ function PedidosRepartidor() {
           throw new Error("Error al obtener pedidos");
         }
         const data = await response.json();
+
+        console.log("Estados recibidos:", data.map(p => `"${p.estado}"`)); // depuración
+
         setPedidos(data);
       } catch (error) {
         console.error("Error al obtener pedidos:", error);
@@ -27,8 +30,13 @@ function PedidosRepartidor() {
     fetchPedidos();
   }, []);
 
+  // 🔧 Función de normalización mejorada
   const normalizar = (texto) =>
-    texto?.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+    texto?.toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/\s+/g, " ") // unifica espacios múltiples
+      .trim();              // quita espacios al inicio/final
 
   const pedidosMapeados = pedidos.map((p) => ({
     id: p.pedidoId,
@@ -41,13 +49,20 @@ function PedidosRepartidor() {
     metodoPago: p.metodoPago,
   }));
 
-  const pedidosFiltrados = pedidosMapeados.filter((pedido) => {
-    const filtro = normalizar(busqueda);
-    return (
-      normalizar(pedido.direccion).includes(filtro) ||
-      normalizar(pedido.nombreCliente).includes(filtro)
-    );
-  });
+  const pedidosFiltrados = pedidosMapeados
+    // Filtrar solo por estados deseados (normalizados)
+    .filter((pedido) => {
+      const estadoNormalizado = normalizar(pedido.estado);
+      return ["en camino", "listo para entrega", "en proceso"].includes(estadoNormalizado);
+    })
+    // Filtrar por búsqueda
+    .filter((pedido) => {
+      const filtro = normalizar(busqueda);
+      return (
+        normalizar(pedido.direccion).includes(filtro) ||
+        normalizar(pedido.nombreCliente).includes(filtro)
+      );
+    });
 
   return (
     <MainContainer>
