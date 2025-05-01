@@ -191,36 +191,83 @@ const Caja = () => {
 
   const generarPDF = () => {
     const doc = new jsPDF();
-
+  
     const movimientosFiltrados = movimientosCaja.filter(mov => {
       const fecha = new Date(mov.fechaHora).toISOString().split("T")[0];
       return fecha >= fechaInicio && fecha <= fechaFin;
     });
-
-    doc.setFontSize(16);
-    doc.text("Movimientos de Caja", 14, 20);
+  
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Soporte Financiero", 105, 20, null, null, "center");
+  
     doc.setFontSize(12);
-    doc.text(`Desde: ${fechaInicio}  Hasta: ${fechaFin}`, 14, 28);
-
-    let y = 40;
-    movimientosFiltrados.forEach((mov, index) => {
-      doc.text(`Usuario: ${mov.usuario}`, 14, y);
-      doc.text(`Referencia: ${mov.referencia}`, 14, y + 6);
-      doc.text(`Motivo: ${mov.motivo}`, 14, y + 12);
-      doc.text(`Proveedor/Cliente: ${mov.nombreProveedorCliente}`, 14, y + 18);
-      doc.text(`Producto: ${mov.producto}`, 14, y + 24);
-      doc.text(`Monto: $${mov.monto}`, 14, y + 30);
-      doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 14, y + 36);
-      y += 48;
-
-      if (y > 270) {
+    doc.setFont("helvetica", "normal");
+    doc.text(`Desde: ${fechaInicio}    Hasta: ${fechaFin}`, 105, 30, null, null, "center");
+  
+    let y = 45;
+    let totalEntradas = 0;
+    let totalSalidas = 0;
+  
+    movimientosFiltrados.forEach((mov) => {
+      const tipo = mov.motivo === "Cobro Pedido" ? "📥 Entrada" : "📤 Salida";
+  
+      if (mov.motivo === "Cobro Pedido") {
+        totalEntradas += mov.monto;
+      } else if (mov.motivo === "Pago a Proveedor") {
+        totalSalidas += mov.monto;
+      }
+  
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.1);
+      doc.line(14, y - 4, 195, y - 4); // Línea divisoria
+  
+      doc.setFont("helvetica", "bold");
+      doc.text(`${tipo}`, 105, y, null, null, "center");
+  
+      doc.setFont("helvetica", "normal");
+      y += 6;
+      doc.text(`Usuario: ${mov.usuario}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Referencia: ${mov.referencia}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Motivo: ${mov.motivo}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Proveedor/Cliente: ${mov.nombreProveedorCliente}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Producto: ${mov.producto}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Monto: $${mov.monto.toFixed(2)}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 105, y, null, null, "center");
+      y += 12;
+  
+      if (y > 260) {
         doc.addPage();
         y = 20;
       }
     });
-
-    doc.save("C:/movimientos-caja.pdf");
+  
+    doc.line(14, y - 4, 195, y - 4); // Línea final
+  
+    // Resumen de totales
+    const balance = totalEntradas - totalSalidas;
+    y += 10;
+    doc.setFont("helvetica", "bold");
+    doc.text("Resumen Financiero:", 105, y, null, null, "center");
+  
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    doc.text(`Total Entradas (📥): $${totalEntradas.toFixed(2)}`, 105, y, null, null, "center");
+    y += 8;
+    doc.text(`Total Salidas (📤): $${totalSalidas.toFixed(2)}`, 105, y, null, null, "center");
+    y += 8;
+    doc.text(`Balance: $${balance.toFixed(2)}`, 105, y, null, null, "center");
+  
+    // Guardar archivo con nombre personalizado
+    doc.save(`Soporte financiero_${fechaInicio} - ${fechaFin}.pdf`);
   };
+  
 
   useEffect(() => {
     const fetchCajaMovimientos = async () => {
