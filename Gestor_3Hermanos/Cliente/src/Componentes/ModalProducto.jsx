@@ -1,24 +1,32 @@
+//IMPORTACIONES
+//LIBRERIAS
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import styled from "styled-components";
 
+//COMPONENTES
 import Button from "../Componentes/Button";
 import Icon from "../Componentes/Icon";
 import DropBox from "../Componentes/DropBox";
-import { TextBox } from "../Componentes/TextComponent";
+import { TextBox, Label } from "../Componentes/TextComponent";
 import SubTitulo from "./SubTitle";
 
+//ICONOS
 import addIcon from "../Componentes/Iconos/new.png";
 import details from "../Componentes/Iconos/details.png";
-import idIcon from "../Componentes/Iconos/id.png";
+import ioProducto from "../Componentes/Iconos/ioProducto.png";
+import updateIcon from "../Componentes/Iconos/updateIcon.png";
 import productoIcon from "../Componentes/Iconos/productoIcon.png";
 import stockIcon from "../Componentes/Iconos/stock.png";
 import priceIcon from "../Componentes/Iconos/priceIcon.png";
 import proveedorIcon from "../Componentes/Iconos/proveedorIcon.png";
 import newIcon from "../Componentes/Iconos/preparando.png";
 import backIcon from "../Componentes/Iconos/back.png";
+import historyIcon from "../Componentes/Iconos/history.png";
 
-const ModalOverlay = styled.div`
+
+//ESTILOS DE COMPONENTES
+const ModalOverlay = styled.div` //Fondo del modal
   position: fixed;
   top: 0;
   left: 0;
@@ -31,7 +39,7 @@ const ModalOverlay = styled.div`
   justify-content: center;
 `;
 
-const ModalContent = styled.div`
+const ModalContent = styled.div` //Contenido del modal
   background: #f9f4ee;
   border: 4px dashed #b3815d;
   padding: 1.5rem;
@@ -44,15 +52,14 @@ const ModalContent = styled.div`
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-const Section = styled.div`
+const Section = styled.div`      //Contenedor de Boton de volver
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   border-bottom: 1px solid #b3815d;
   padding-bottom: 0.5rem;
 `;
-
-const VolverBtn = styled.a`
+const VolverBtn = styled.a`      //Boton de volver
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -64,25 +71,24 @@ const VolverBtn = styled.a`
   cursor: pointer;
 `;
 
-const Label = styled.label`
-  font-weight: bold;
-  color: #5d4037;
+const Section2 = styled.div`      //Contenedor de Formulario por Columnas
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+//   flex-direction: column;
+  gap: 1rem;
 `;
 
-const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSeleccionado }) => {
+const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSeleccionado, productosDisponibles }) => {
     if (!showModal) return null;
 
+    const usuarioLogueado = localStorage.getItem("usuario");
+    const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
+    const UsrID = usuario?.usuarioId;
+
     const [formData, setFormData] = useState({
-        productoId: "",
-        nombre: "",
-        descripcion: "",
-        precio: "",
-        stock: "",
+
+        solicitudId: "",
         tipoMovimiento: "Entrada",
-        motivoMovimiento: "Compra"
+        motivoMovimiento: "NuevoProducto"
     });
 
 
@@ -96,12 +102,38 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
         Entrada: [
             { value: "NuevoProducto", label: "Nuevo Producto" },
             { value: "ReStock", label: "ReStock" },
-            { value: "Devolucion", label: "Devolución" }
+            // { value: "Devolucion", label: "Devolución" }
         ],
         Salida: [
-            { value: "Venta", label: "Venta a Cliente" },
-            { value: "Merma", label: "Merma/Pérdida" }
+            // { value: "Venta", label: "Venta a Cliente" },
+            { value: "Merma o Perdida", label: "Merma/Pérdida" }
         ]
+    };
+
+    const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
+
+
+    const [solicitudes, setSolicitudes] = useState([]);
+
+    useEffect(() => {
+        if (mode === "MovStock") {
+            fetchSolicitudesPendientes();
+        }
+    }, [mode]);
+
+
+    const fetchSolicitudesPendientes = async () => {
+        try {
+            const res = await fetch("http://localhost:3000/api/solicitudes?estado=Enviado");
+            const result = await res.json();
+            if (result.success) {
+                setSolicitudes(result.data);
+            } else {
+                console.error("Error en la respuesta:", result.error);
+            }
+        } catch (err) {
+            console.error("Error cargando solicitudes:", err);
+        }
     };
 
 
@@ -131,25 +163,35 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 nombre: productoSeleccionado.nombre || "",
                 descripcion: productoSeleccionado.descripcion || "",
                 precio: productoSeleccionado.precio || "",
-                stock: mode === "agregarStock" ? "" : productoSeleccionado.stock || "",
-                proveedor: productoSeleccionado.proveedor?.nombre || "",
+                stock: mode === "MovStock" ? "" : productoSeleccionado.stock || "",
+                proveedorId: productoSeleccionado.proveedor?.proveedorId || "",
             });
-        } if (mode === "agregarStock" && productoSeleccionado) {
+        } if (mode === "MovStock" && productoSeleccionado) {
             setFormData({
-                productoId: productoSeleccionado.productoId || "",
-                nombre: productoSeleccionado.nombre || "",
-                descripcion: productoSeleccionado.descripcion || "",
-                precio: productoSeleccionado.precio || "",
-                stock: mode === "agregarStock" ? "" : productoSeleccionado.stock || "",
+                solicitudId: "",
                 tipoMovimiento: "Entrada",
                 motivoMovimiento: "ReStock",
-                stock: "",
-                proveedor: productoSeleccionado.proveedor?.nombre || ""
             });
         }
     }, [productoSeleccionado, showModal, mode]);
 
+    const [modalAbierto, setModalAbierto] = useState(false);
 
+    const abrirModalConSolicitud = async (solicitudId) => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/solicitudes/?${solicitudId}`);
+            const result = await res.json();
+            if (result.success) {
+                setSolicitudSeleccionada(result.data);
+
+                setModalAbierto(true);
+            } else {
+                console.error("Error al cargar la solicitud:", result.error);
+            }
+        } catch (err) {
+            console.error("Error al cargar la solicitud:", err);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -160,54 +202,67 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
         }
 
         if (mode === "nuevo") {
-            const proveedorId = await seleccionarProveedor(formData.proveedor?.nombre);
-            if (!proveedorId) {
+            if (!formData.proveedorId) {
                 toast.error("Proveedor no válido");
                 return;
             }
             const producto = {
-                productoId: Number(formData.productoId),
                 nombre: formData.nombre,
                 descripcion: formData.descripcion,
                 precio: Number(formData.precio),
                 stock: Number(formData.stock),
-                proveedor: formData.proveedorId
+                proveedor: formData.proveedor
             };
 
+
             onSave(producto);
-        } else if (mode === "agregarStock") {
-            if (!formData.stock) {
-                toast.error("Debe especificar la cantidad");
+        } else if (mode === "MovStock") {
+            if (!formData.stock || !formData.solicitudId) {
+                toast.error("Debe especificar cantidad y seleccionar una solicitud");
                 return;
             }
 
             const cantidad = Number(formData.stock);
+
             const movimiento = {
                 cantidad: formData.tipoMovimiento === "Salida" ? -cantidad : cantidad,
                 tipoMovimiento: formData.tipoMovimiento,
                 motivo: formData.motivoMovimiento,
-                usuarioId: 1, // Aquí deberías usar el ID del usuario real
-                fechaMovimiento: new Date().toISOString()
+                usuarioId: UsrID,
+                fechaMovimiento: new Date().toISOString(),
+                solicitudId: formData.solicitudId // Asociar movimiento con la solicitud
             };
 
             const productoActualizado = {
-                productold: productoSeleccionado.productold,
+                productoId: productoSeleccionado.productoId,
                 stock: formData.tipoMovimiento === "Salida"
                     ? productoSeleccionado.stock - cantidad
                     : productoSeleccionado.stock + cantidad,
-                historialInventario: [movimiento]
+                    historialInventario: [...productoActual.historialInventario, movimiento]
             };
 
-            onSave(productoActualizado);
+            // Enviar producto actualizado
+            await onSave(productoActualizado);
 
-        } else if (mode === "editar") {
+            // Opcional: actualizar estado de la solicitud a "Completada"
+            try {
+                await fetch(`http://localhost:3000/api/solicitudes/${formData.solicitudId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ estado: "Completada" })
+                });
+            } catch (err) {
+                console.error("Error al actualizar estado de solicitud:", err);
+            }
+        }
+        else if (mode === "editar") {
             const producto = {
                 productoId: productoSeleccionado?.productoId,
                 descripcion: formData.descripcion,
                 precio: Number(formData.precio)
             };
 
-            console.log("Enviando producto:", producto);
+
             onSave(producto);
         }
     };
@@ -227,6 +282,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
             const result = await res.json();
             if (result.success && Array.isArray(result.data)) {
                 setProveedores(result.data); // state
+
             } else {
                 console.error("Formato de datos inesperado:", result);
             }
@@ -243,8 +299,8 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 return { title: "Nuevo Producto", buttonText: "Guardar", icon: addIcon };
             case "editar":
                 return { title: "Editar Producto", buttonText: "Actualizar", icon: details };
-            case "agregarStock":
-                return { title: "Agregar Stock", buttonText: "Añadir", icon: stockIcon };
+            case "MovStock":
+                return { title: "Movimiento de Stock", buttonText: "Registrar Ingreso", icon: updateIcon };
             default:
                 return { title: "Producto", buttonText: "Guardar", icon: newIcon };
         }
@@ -253,12 +309,96 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     const { title, buttonText, icon } = getModalConfig();
 
     const campos = [
-        // { icon: idIcon, label: "Código de Producto", key: "productoId", disabled: ["editar", "agregarStock"] },
-        { icon: productoIcon, label: "Producto", key: "nombre", disabled: ["editar", "agregarStock"] },
-        { icon: details, label: "Descripción", key: "descripcion", disabled: ["agregarStock"] },
-        { icon: priceIcon, label: "Precio", key: "precio", disabled: ["agregarStock"] },
-        { icon: stockIcon, label: mode === "agregarStock" ? "Cantidad Kg" : "Stock", key: "stock", disabled: ["editar"] },
+        { icon: productoIcon, label: "Producto", key: "nombre", disabled: ["editar", "MovStock"] },
+        { icon: details, label: "Descripción", key: "descripcion", disabled: ["MovStock"] },
+        { icon: priceIcon, label: "Precio", key: "precio", disabled: ["MovStock"] },
+        { icon: stockIcon, label: mode === "MovStock" ? "Cantidad Kg" : "Stock", key: "stock", disabled: ["editar"] },
     ];
+    const handleTipoMovimientoChange = (e) => {
+        const selectedTipo = e.target.value;
+        setFormData({
+            ...formData,
+            tipoMovimiento: selectedTipo,
+            motivoMovimiento: motivosMovimiento[selectedTipo]?.[0]?.value || '',
+        });
+    };
+
+    const handleMotivoMovimientoChange = (e) => {
+        setFormData({ ...formData, motivoMovimiento: e.target.value });
+    };
+
+    const handleSolicitudChange = (e) => {
+        const selectedSolicitudId = Number(e.target.value); // Convierte a número el valor seleccionado
+        const selected = solicitudes.find(s => s.solicitudId === selectedSolicitudId);
+        if (selected) {
+            setSolicitudSeleccionada(selected); // Actualiza el estado con la solicitud seleccionada
+            setFormData({
+                ...formData,
+                solicitudId: selectedSolicitudId,
+                solicitud: selected
+            });
+        } else {
+            setSolicitudSeleccionada(null); // Si no se encuentra, asegúrate de limpiar el estado
+        }
+    };
+
+    const registrarDesdeSolicitud = async () => {
+        if (!solicitudSeleccionada) return toast.error("No hay solicitud seleccionada");
+
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        const usuarioId = usuario?.usuarioId;
+
+        for (const item of solicitudSeleccionada.productos) {
+            const movimiento = {
+                cantidad: item.cantidad,
+                tipoMovimiento: "Entrada",
+                motivo: item.nombreTemporal ? "NuevoProducto" : "ReStock",
+                usuarioId,
+                fechaMovimiento: new Date().toISOString(),
+                solicitudId: solicitudSeleccionada.solicitudId
+            };
+
+            if (item.nombreTemporal) {
+                // Producto nuevo
+                const nuevoProducto = {
+                    nombre: item.nombreTemporal,
+                    descripcion: "", // vacía por ahora
+                    precio: Number((item.costoUnitario * 1.2).toFixed(2)), // 20% margen
+                    stock: item.cantidad,
+                    proveedor: solicitudSeleccionada.proveedor.proveedorId,
+                    historialInventario: [...productoActual.historialInventario, movimiento]
+                };
+
+                await onSave(nuevoProducto); // Esto hace POST
+
+            } else {
+                // Producto existente: hacer patch
+                const productoActual = productosDisponibles.find(p => p.productoId === item.productoId);
+                if (!productoActual) continue;
+
+                const productoActualizado = {
+                    productoId: productoActual.productoId,
+                    stock: productoActual.stock + item.cantidad,
+                    historialInventario: [...productoActual.historialInventario, movimiento]
+                };
+
+                await onSave(productoActualizado); // Esto hace PATCH
+            }
+        }
+
+        // Marcar solicitud como recibida
+        await fetch(`http://localhost:3000/api/solicitudes/${solicitudSeleccionada.solicitudId}/recibir`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuarioRecibe: usuarioId })
+        });
+
+        toast.success("Productos registrados y solicitud marcada como Recibida");
+        handleCloseModal(); // cerrar modal
+    };
+
+
+
 
 
 
@@ -271,88 +411,166 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                     </VolverBtn>
                 </Section>
 
+
                 <SubTitulo stitle={title} />
 
-                {campos.map((campo) => (
-                    <Label key={campo.label}>
-                        <Icon src={campo.icon} /> {campo.label}
-                        <TextBox
-                            disabled={campo.disabled.includes(mode)}
-                            value={formData[campo.key]}
-                            onChange={(e) => setFormData({ ...formData, [campo.key]: e.target.value })}
-                        />
-                    </Label>
-                ))}
-                {mode === "agregarStock" && (
-                    <>
-                        <Label>
-                            <Icon src={stockIcon} /> Tipo de Movimiento
-                            <DropBox
-                                value={formData.tipoMovimiento}
-                                onChange={(e) => {
-                                    setFormData({
-                                        ...formData,
-                                        tipoMovimiento: e.target.value,
-                                        motivoMovimiento: motivosMovimiento[e.target.value][0].value
-                                    });
-                                }}
-                            >
-                                {tiposMovimiento.map((tipo) => (
-                                    <option key={tipo.value} value={tipo.value}>
-                                        {tipo.label}
-                                    </option>
-                                ))}
-                            </DropBox>
+                <Section2>
+
+
+                    {/* {campos.map((campo) => (
+                        <Label key={campo.label}>
+                            <Icon src={campo.icon} /> {campo.label}
+                            <TextBox
+                                disabled={campo.disabled.includes(mode)}
+                                value={formData[campo.key]}
+                                onChange={(e) => setFormData({ ...formData, [campo.key]: e.target.value })}
+                            />
                         </Label>
+                    ))} */}
+                    {mode === "MovStock" && (
 
-                        <Label>
-                            <Icon src={details} /> Motivo
-                            <DropBox
-                                value={formData.motivoMovimiento}
-                                onChange={(e) => setFormData({ ...formData, motivoMovimiento: e.target.value })}
-                            >
-                                {motivosMovimiento[formData.tipoMovimiento].map((motivo) => (
-                                    <option key={motivo.value} value={motivo.value}>
-                                        {motivo.label}
-                                    </option>
-                                ))}
-                            </DropBox>
-                        </Label>
-                    </>
-                )}
-
-                <Label>
-                    <Icon src={proveedorIcon} /> Proveedor
-                    <DropBox
-                        name="proveedorId"
-                        disabled={mode === "editar"}
-                        value={formData.proveedorId || ""}
-                        onChange={(e) =>
-                            setFormData({ ...formData, proveedorId: Number(e.target.value) })
-                        }
-                    >
-                        <option value="">Seleccione un proveedor</option>
-                        {proveedores.map((prov) => (
-                            <option key={prov.proveedorId} value={prov.proveedorId}>
-                                {prov.nombre}
-                            </option>
-                        ))}
-                    </DropBox>
+                        <>
+                            <Section>
+                                <Label>
+                                    <Icon src={ioProducto} /> Tipo de Movimiento
+                                    <DropBox
+                                        value={formData.tipoMovimiento}
+                                        onChange={handleTipoMovimientoChange}
+                                    >
+                                        {tiposMovimiento.map((tipo) => (
+                                            <option key={tipo.value} value={tipo.value}>
+                                                {tipo.label}
+                                            </option>
+                                        ))}
+                                    </DropBox>
+                                </Label>
 
 
-                </Label>
+                                {formData.tipoMovimiento === "Salida" && (
+                                    <Label>
+                                        <Icon src={details} /> Motivo
+                                        <DropBox
+                                            value={formData.motivoMovimiento}
+                                            onChange={handleMotivoMovimientoChange}
+                                        >
+                                            {motivosMovimiento.Salida.map((motivo) => (
+                                                <option key={motivo.value} value={motivo.value}>
+                                                    {motivo.label}
+                                                </option>
+                                            ))}
+                                        </DropBox>
+                                    </Label>
+                                )}
+
+                                {formData.tipoMovimiento === "Entrada" && (
+                                    <Label>
+                                        <Icon src={historyIcon} /> Solicitud Recibida
+                                        <DropBox
+                                            value={formData.solicitudId}
+                                            onChange={handleSolicitudChange}
+                                        >
+                                            <option value="">Seleccione una solicitud</option>
+                                            {solicitudes.map((sol) => (
+                                                <option key={sol.solicitudId} value={sol.solicitudId}>
+                                                    #{sol.solicitudId} - {sol.proveedor?.nombre || 'Proveedor desconocido'}
+                                                </option>
+                                            ))}
+                                        </DropBox>
+                                    </Label>
+                                )}
 
 
+
+                            </Section>
+                            {solicitudSeleccionada && (
+
+                                <Section>
+                                    <h2>Solicitud #{solicitudSeleccionada.solicitudId}</h2>
+                                    <div>
+                                        <strong>Proveedor:</strong> {solicitudSeleccionada.proveedor?.nombre || 'Desconocido'}
+                                    </div>
+                                    <div>
+                                        <strong>Estado:</strong> {solicitudSeleccionada.estado}
+                                    </div>
+                                    <div>
+                                        <strong>Solicitada por:</strong> Usuario #{solicitudSeleccionada.usuarioSolicita}
+                                    </div>
+                                    <div>
+                                        <strong>Fecha de solicitud:</strong> {new Date(solicitudSeleccionada.fechaSolicitud).toLocaleString()}
+                                    </div>
+                                    <hr />
+                                    <h3>Productos solicitados</h3>
+                                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Cantidad</th>
+                                                <th>Costo Unitario</th>
+                                                <th>Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {solicitudSeleccionada.productos?.map((p, index) => (
+                                                <tr key={index}>
+                                                    <td>{p.producto?.nombre || 'Producto desconocido'}</td>
+                                                    <td>{p.cantidad}</td>
+                                                    <td>${p.costoUnitario.toFixed(2)}</td>
+                                                    <td>${p.subtotal.toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <div style={{ textAlign: "right", marginTop: "1rem" }}>
+                                        <strong>Total:</strong> ${solicitudSeleccionada.total.toFixed(2)}
+                                    </div>
+                                </Section>
+                            )}
+
+                            <Button onClick={registrarDesdeSolicitud}>
+                                <Icon src={addIcon} /> Registrar productos
+                            </Button>
+
+                        </>
+
+                    )}
+
+
+                    {/* <Label>
+                        <Icon src={proveedorIcon} /> Proveedor
+                        <DropBox
+                            name="proveedorId"
+                            disabled={mode === "editar"}
+                            value={formData.proveedorId || ""}
+                            onChange={(e) => {
+                                const selected = proveedores.find(p => p.proveedorId === Number(e.target.value));
+                                setFormData({
+                                    ...formData,
+                                    proveedorId: Number(e.target.value),
+                                    proveedor: selected
+                                });
+                            }}
+                        >
+                            <option value="">Seleccione un proveedor</option>
+                            {proveedores.map((prov) => (
+                                <option key={prov.proveedorId} value={prov.proveedorId}>
+                                    {prov.nombre}
+                                </option>
+                            ))}
+                        </DropBox>
+
+                    </Label> */}
+
+
+
+
+                </Section2>
 
                 <Button onClick={handleSubmit}>
                     <Icon src={icon} /> {buttonText}
                 </Button>
 
-
             </ModalContent>
         </ModalOverlay>
     );
 };
-
-
 export default ModalProducto;

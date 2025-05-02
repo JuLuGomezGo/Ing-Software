@@ -106,12 +106,9 @@ function GestionInventario() {
 
     // Datos de ejemplo basados en el modelo
     const [productos, setProductos] = useState([]);
-
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState("nuevo");
     const [mode, setMode] = useState("default");
-
-
 
 
     // Filtrar productos basado en la búsqueda
@@ -122,7 +119,6 @@ function GestionInventario() {
     const handleCloseModal = () => {
         setShowModal(false);
     };
-
     const openModal = (newMode) => {
         setMode(newMode);
         setShowModal(true);
@@ -141,7 +137,7 @@ function GestionInventario() {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}` // Seguridad añadida
+                    'Authorization': `Bearer ${localStorage.getItem('token')}` 
                 },
                 ...(body && { body: JSON.stringify(body) })
             };
@@ -175,53 +171,73 @@ function GestionInventario() {
 
 
 
-    const handleGuardarProducto = async (producto) => {
-        if (!producto) {
-            console.error("Producto no definido en handleGuardarProducto");
-            return;
-        }
+const handleGuardarProducto = async (producto) => {
+  if (!producto) {
+    console.error("Producto no definido en handleGuardarProducto");
+    return;
+  }
 
-        // Definir si es POST (nuevo) o PATCH (editar/agregar stock)
-        const isNuevo = mode === "nuevo";
-        const url = isNuevo
-            ? "http://localhost:3000/api/productos" // POST sin ID en la URL
-            : `http://localhost:3000/api/productos/${producto.productoId}`; // PATCH con ID
+  const isNuevo = !producto.productoId;
 
-        const method = isNuevo ? "POST" : "PATCH";
+  const url = isNuevo
+    ? "http://localhost:3000/api/productos"
+    : `http://localhost:3000/api/productos/${producto.productoId}`;
 
-        try {
-            console.log("Enviando producto:", JSON.stringify(producto, null, 2));
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(producto)
-            });
+  const method = isNuevo ? "POST" : "PATCH";
 
-            const data = await response.json();
-            console.log("Respuesta del servidor:", data); // Agregar este log
+  // Si es restock, asegurarse de que se acumula historial
+  let body = producto;
 
-            if (!response.ok) throw new Error(data.message || "Error al actualizar");
+  if (!isNuevo && producto.historialInventario?.length) {
+    // Buscar el producto actual para preservar historial existente
+    const productoActual = productos.find(p => p.productoId === producto.productoId);
+    if (productoActual) {
+      body = {
+        ...producto,
+        historialInventario: [
+          ...(productoActual.historialInventario || []),
+          ...producto.historialInventario
+        ]
+      };
+    }
+  }
 
-            // Actualizar la lista de productos
-            if (!isNuevo) {
-                setProductos(prev =>
-                    prev.map(prod => prod.productoId === data.data.productoId ? data.data : prod)
-                );
-            } else {
-                setProductos(prev => [...prev, data.data]);
-            }
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(body)
+    });
 
-            toast.success(data.message || "Producto actualizado");
-            handleCloseModal();
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Error al actualizar");
 
-        } catch (error) {
-            toast.error(error.message);
-            console.error("Detalles del error:", error);
-        }
-    };
+    // Actualizar lista de productos localmente
+    if (isNuevo) {
+      setProductos(prev => [...prev, data.data]);
+    } else {
+      setProductos(prev =>
+        prev.map(p => p.productoId === data.data.productoId ? data.data : p)
+      );
+
+      // Actualizar producto seleccionado si corresponde
+      if (selectedProduct?.productoId === data.data.productoId) {
+        setSelectedProduct(data.data);
+      }
+    }
+
+    toast.success(data.message || "Producto actualizado");
+    handleCloseModal();
+
+  } catch (error) {
+    toast.error(error.message);
+    console.error("Detalles del error:", error);
+  }
+};
+
 
 
 
@@ -304,10 +320,13 @@ function GestionInventario() {
 
                     <FilterSection>
                         <Button size="medium" >Filtros</Button>
-                        <Button size="medium" onClick={() => openModal("nuevo")}>
-                            <Icon src={addIcon} /> Nuevo Producto
-                        </Button>
-                        <Button >
+                        <Button size="medium" variant="secondary" onClick={() => {
+                                    setProductoEnModal(selectedProduct);
+                                    openModal("MovStock")
+                                }}>
+                                    <Icon src={stockIcon} /> Mov. Stock
+                                </Button>
+                        <Button onClick={() =>navigate('/solicitudProducto')}>
                             <Icon src={historyIcon} /> Solicitudes
                         </Button>
                         <Button onClick={() => navigate('/gestion-proveedores')}>
@@ -322,6 +341,7 @@ function GestionInventario() {
                                 handleCloseModal={handleCloseModal}
                                 productoSeleccionado={productoEnModal}
                                 onSave={(handleGuardarProducto)}
+                                productosDisponibles={productos}
 
                             />
                         )}
@@ -361,25 +381,21 @@ function GestionInventario() {
                     <ProductDetailSection>
                         <ProductInfo>
                             <h3>📜 Detalles del Producto</h3>
-                            <p><strong>📌 Nombre:</strong> {selectedProduct.nombre}</p>
                             <p><strong>🏷️ ID:</strong> {selectedProduct.productoId}</p>
-                            <p><strong>📦 Stock:</strong> {selectedProduct.stock} kg</p>
+                            <p><strong>📌 Nombre:</strong> {selectedProduct.nombre}</p>
+                            <p><strong>📝 Descripción:</strong> {selectedProduct.descripcion}</p>
                             <p><strong>💲 Precio:</strong> ${selectedProduct.precio.toFixed(2)}</p>
+                            <p><strong>📦 Stock:</strong> {selectedProduct.stock} kg</p>
                             <p><strong>🚚 Proveedor:</strong> {selectedProduct.proveedor.nombre}</p>
-                            <p><strong>📞 Contacto:</strong> {selectedProduct.proveedor.contacto}</p>
+                            <p><strong>📞 Contacto:</strong> {selectedProduct.proveedor.contacto} - {selectedProduct.proveedor.email}</p>
 
                             <ActionButtons>
                                 <Button size="medium" variant="primary" onClick={() => {
                                     setProductoEnModal(selectedProduct);
                                     openModal("editar");
+                                    console.log("Producto seleccionado:", selectedProduct);
                                 }}>
                                     <Icon src={editIcon} /> Editar
-                                </Button>
-                                <Button size="medium" variant="secondary" onClick={() => {
-                                    setProductoEnModal(selectedProduct);
-                                    openModal("agregarStock")
-                                }}>
-                                    <Icon src={stockIcon} /> Mov. Stock
                                 </Button>
                                 <Button size="medium" variant="danger" onClick={() => {
                                     if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
@@ -398,24 +414,35 @@ function GestionInventario() {
                             <h3>📊 Historial de Movimientos</h3>
                             <Table>
                                 <thead>
-                                    <tr>
+                                    <Tr>
                                         <Th>📅 Fecha</Th>
-                                        <Th>🔄 Tipo</Th>
-                                        <Th>📉 Cantidad</Th>
+                                        <Th>💬 Motivo</Th>
+                                        <Th>📉 Cant.</Th>
                                         <Th>👤 Usuario</Th>
-                                    </tr>
+                                        <Th>🔗 Relación</Th>
+                                        <Th>📝 Notas</Th>
+                                    </Tr>
                                 </thead>
                                 <tbody>
-                                    {selectedProduct.historialInventario.map((movimiento, index) => (
-                                        <tr key={index}>
-                                            <Td>{movimiento.fechaMovimiento}</Td>
-                                            <Td>{movimiento.tipoMovimiento}</Td>
-                                            <Td>{movimiento.cantidad > 0 ? `+${movimiento.cantidad}` : movimiento.cantidad} kg</Td>
-                                            <Td>{movimiento.usuarioId}</Td>
-                                        </tr>
+                                    {selectedProduct.historialInventario.map((mov, index) => (
+                                        <Tr key={index}>
+                                            <Td>{new Date(mov.fechaMovimiento).toLocaleString()}</Td>
+                                            <Td>{mov.motivo}</Td>
+                                            <Td style={{ color: mov.cantidad > 0 ? "green" : "red", fontWeight: 600 }}>
+                                                {mov.cantidad > 0 ? `+${mov.cantidad}` : mov.cantidad} kg
+                                            </Td>
+                                            <Td>{mov.usuarioId}</Td>
+                                            <Td>
+                                                {mov.pedidoId && <div>🧾 Pedido #{mov.pedidoId}</div>}
+                                                {mov.solicitudId && <div>📄 Solicitud #{mov.solicitudId}</div>}
+                                                {mov.cliente && <div>👥 {mov.cliente}</div>}
+                                            </Td>
+                                            <Td>{mov.notas || "—"}</Td>
+                                        </Tr>
                                     ))}
                                 </tbody>
                             </Table>
+
                         </MovementHistory>
                     </ProductDetailSection>
                 ) : (
@@ -427,5 +454,4 @@ function GestionInventario() {
         </MainContainer>
     );
 }
-
 export default GestionInventario;

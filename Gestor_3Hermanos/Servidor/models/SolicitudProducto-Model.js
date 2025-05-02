@@ -28,24 +28,61 @@ const solicitudSchema = new mongoose.Schema({
     unique: true,
     validate: (v) => /^\d{4}$/.test(v.toString())
   },
-  proveedorId: { type: Number, required: true },
+  proveedor: {
+    type: Number,
+    ref: 'Proveedor',
+    required: true
+  },
   fechaSolicitud: { type: Date, default: Date.now },
   estado: {
     type: String,
-    enum: ['Pendiente', 'Enviado', 'Recibido'],
+    enum: ['Pendiente', 'Enviado', 'Recibido', 'Cancelado'],
     default: 'Pendiente',
     required: true
   },
-  productoId: { type: Number, ref: 'Producto', required: true },
-  cantidad: { type: Number, required: true }
+  productos: [
+    {
+      productoId: { type: Number, ref: 'Producto' },
+      nombreTemporal: { type: String }, 
+      cantidad: { type: Number, required: true, min: 1 },
+      costoUnitario: { type: Number, required: true }, // Precio de compra unitario
+      subtotal: { type: Number }
+    }
+  ],
+  total: Number,  // Suma de subtotales
+  usuarioSolicita: Number, // Para saber quién generó la solicitud
+  fechaRecepcion: Date, // Para registrar la entrega efectiva
+  usuarioRecibe: Number, // Para trazabilidad de la recepción
+
 });
 
 
 solicitudSchema.pre('save', async function (next) {
-  if (!this.solicitudId) {
-    this.solicitudId = await generarIdUnico('solicitudId');
+  try {
+    if (!this.solicitudId) {
+      this.solicitudId = await generarIdUnico('solicitudId');
+    }
+
+    // Calcular subtotales si no están definidos
+    this.productos.forEach((item) => {
+      if (!item.productoId && !item.nombreTemporal) {
+        throw new Error("Cada producto debe tener productoId o nombreTemporal.");
+      }
+    
+      if (!item.subtotal) {
+        item.subtotal = item.cantidad * item.costoUnitario;
+      }
+    });
+    
+
+    // Calcular total
+    this.total = this.productos.reduce((acc, prod) => acc + prod.subtotal, 0);
+
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
+
 
 export default mongoose.model('SolicitudProducto', solicitudSchema);

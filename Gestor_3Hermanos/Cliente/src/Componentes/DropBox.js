@@ -2,6 +2,7 @@
 import styled from "styled-components";
 
 const DropBox = styled.select`
+  height: fit-content;
   padding: 12px;
   border: 2px solid #a96e3b;
   border-radius: 12px;

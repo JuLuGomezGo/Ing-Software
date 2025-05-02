@@ -10,7 +10,7 @@ import { Table, Th, Td } from "../Componentes/Table";
 import Button from "../Componentes/Button";
 import SubTitle from "../Componentes/SubTitle";
 import { DateBox, TimeBox } from '../Componentes/Date-TimePicker';
-import { TextBox, TextArea } from '../Componentes/TextComponent';
+import { TextBox, Label } from '../Componentes/TextComponent';
 //import backIcon from "../Componentes/Iconos/back.png";
 //import nuevPedido from "../Componentes/Iconos/nuevoPedido.png";
 import DropBox from "../Componentes/DropBox";
@@ -273,7 +273,7 @@ function GestionPedidos() {
                         <h3>Detalles de Entrega</h3>
                         <div style={{ display: 'grid', gap: '15px', gridTemplateColumns: '1fr 1fr' }}>
                             <div>
-                                <label>Cliente:</label>
+                                <Label>Cliente:</Label>
                                 <TextBox
                                     placeholder="Nombre del cliente"
                                     value={formData.cliente}
@@ -284,7 +284,7 @@ function GestionPedidos() {
                             </div>
 
                             <div>
-                                <label>Método de Pago:</label>
+                                <Label>Método de Pago:</Label>
                                 <DropBox
                                     value={formData.metodoPago}
                                     onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })}
@@ -297,7 +297,7 @@ function GestionPedidos() {
                             </div>
 
                             <div style={{ gridColumn: 'span 2' }}>
-                                <label>Dirección de Entrega:</label>
+                                <Label>Dirección de Entrega:</Label>
                                 <TextBox
                                     placeholder="Dirección de entrega"
                                     value={formData.direccionEntrega}
@@ -308,7 +308,7 @@ function GestionPedidos() {
                             </div>
 
                             <div>
-                                <label>Teléfono:</label>
+                                <Label>Teléfono:</Label>
                                 <TextBox
                                     placeholder="Teléfono"
                                     value={formData.telefono}
@@ -319,7 +319,7 @@ function GestionPedidos() {
                             </div>
 
                             <div>
-                                <label>Fecha de Entrega:</label>
+                                <Label>Fecha de Entrega:</Label>
                                 <DateBox
                                     value={formData.fecha}
                                     onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
@@ -328,7 +328,7 @@ function GestionPedidos() {
                             </div>
 
                             <div>
-                                <label>Hora de Entrega:</label>
+                                <Label>Hora de Entrega:</Label>
                                 <TimeBox
                                     value={formData.hora}
                                     onChange={(e) => setFormData({ ...formData, hora: e.target.value })}

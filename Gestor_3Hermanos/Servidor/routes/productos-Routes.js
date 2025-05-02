@@ -6,7 +6,7 @@ const router = express.Router();
 // Obtener todos los productos
 router.get('/', async (req, res) => {
   try {
-    const productos = await Producto.find()
+    const productos = await Producto.find().populate('proveedor')
       .select('-__v')
       .lean();
 
@@ -23,10 +23,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Obtener un producto por ID
+// Obtener un producto por ID con proveedor
 router.get('/:id', async (req, res) => {
   try {
-    const producto = await Producto.findOne({ productoId: req.params.id })
+    const producto = await Producto.findOne({ productoId: req.params.id }).populate('proveedor')
       .select('-__v')
       .lean();
 
@@ -92,7 +92,7 @@ router.put('/:id', async (req, res) => {
     //campos actualizables
     const camposPermitidos = {
       generales: ['nombre', 'descripcion', 'precio', 'stock', 'proveedor'],
-      anidados: [ 'historialInventario']
+      anidados: ['historialInventario']
     };
 
     // Actualizar campos generales
@@ -144,14 +144,12 @@ router.patch('/:id', async (req, res) => {
       { productoId: Number(req.params.id) },
       req.body,
       { new: true, runValidators: true }
-    );
+    ).populate('proveedor');
 
     if (!producto) {
       return res.status(404).json({ success: false, message: "Producto no encontrado" });
     }
 
-    // Actualiza solo los campos enviados
-    // await producto.update(datosActualizados);
 
     res.json({ success: true, message: "Producto actualizado", data: producto });
   } catch (error) {
@@ -196,35 +194,108 @@ router.post('/registrar-entrada', async (req, res) => {
   try {
     const { productoId, cantidad, usuarioId, motivo, solicitudId } = req.body;
 
-    const producto = await Producto.findOne({ productoId });
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
+    // Verificar si todos los campos requeridos están presentes
+    if (!productoId || !cantidad || !usuarioId || !motivo) {
+      return res.status(400).json({
+        success: false,
+        message: 'Faltan campos requeridos',
+      });
+    }
 
-    // Crear entrada en el historial
+    // Buscar el producto
+    const producto = await Producto.findOne({ productoId });
+    if (!producto) {
+      return res.status(404).json({ success: false, message: 'Producto no encontrado' });
+    }
+
+    // Crear movimiento de historial
     const nuevoMovimiento = {
       cantidad,
       tipoMovimiento: 'Entrada',
       motivo,
       usuarioId,
+      detalles: {
+        solicitudId: solicitudId || null, // Si hay solicitudId, lo registramos
+      },
+      fechaMovimiento: new Date(),
+    };
+
+    // Actualizar stock del producto
+    producto.stock += cantidad;
+
+    // Agregar movimiento al historial de inventario
+    producto.historialInventario.push(nuevoMovimiento);
+
+    // Guardar cambios en el producto
+    await producto.save();
+
+    // Si la entrada proviene de una solicitud, actualizar la solicitud a "Recibido"
+    if (solicitudId) {
+      const solicitud = await SolicitudProducto.findOne({ solicitudId });
+      if (solicitud) {
+        solicitud.estado = 'Recibido'; // Cambiar estado a 'Recibido'
+        await solicitud.save();
+      }
+    }
+
+    // Responder éxito
+    res.status(200).json({
+      success: true,
+      message: 'Entrada registrada correctamente',
+      producto
+    });
+  } catch (error) {
+    // Responder error
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar entrada',
+      error: error.message
+    });
+  }
+});
+
+router.post('/registrar-salida', async (req, res) => {
+  try {
+    const { productoId, cantidad, usuarioId, motivo, detalles } = req.body;
+
+    if (!productoId || !cantidad || !usuarioId || !motivo) {
+      return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
+    }
+
+    const producto = await Producto.findOne({ productoId });
+    if (!producto) {
+      return res.status(404).json({ success: false, message: 'Producto no encontrado' });
+    }
+
+    if (producto.stock < cantidad) {
+      return res.status(400).json({ success: false, message: 'Stock insuficiente para la salida solicitada' });
+    }
+
+    const nuevoMovimiento = {
+      cantidad,
+      tipoMovimiento: 'Salida',
+      motivo,
+      usuarioId,
+      detalles: detalles || {},
       fechaMovimiento: new Date()
     };
 
-    producto.stock += cantidad;
+    producto.stock -= cantidad;
     producto.historialInventario.push(nuevoMovimiento);
     await producto.save();
 
-    // Si viene una solicitudId, actualizarla
-    if (solicitudId) {
-      await SolicitudProducto.findOneAndUpdate(
-        { solicitudId },
-        { estado: 'Recibido' }
-      );
-    }
+    res.status(200).json({
+      success: true,
+      message: 'Salida registrada correctamente',
+      producto
+    });
 
-    res.status(200).json({ success: true, message: 'Entrada registrada y solicitud actualizada', producto });
   } catch (error) {
-    res.status(500).json({ error: 'Error al registrar entrada', detalles: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error al registrar salida', detalles: error.message });
   }
 });
+
 
 export default router;
 

@@ -143,8 +143,10 @@ const GestionProveedores = () => {
       if (res.ok) {
         fetchProveedores();
         setFormData({ nombre: "", contacto: "", email: "", direccion: "" });
-        setSelectedProveedor(null); // Limpiar selección
+        toast.success("Proveedor guardado correctamente");
+        setSelectedProveedor(null);
       } else {
+        toast.error("Error al guardar proveedor: " + data.error);
         console.error("Error al guardar:", data);
       }
     } catch (error) {
@@ -158,7 +160,7 @@ const GestionProveedores = () => {
       <Header />
       <Container>
         <SubTitulo
-          ancho={"50%"}
+          ancho={"justo"} 
           stitle="Gestión de Proveedores"
           icono={proveedorIcon}
         />

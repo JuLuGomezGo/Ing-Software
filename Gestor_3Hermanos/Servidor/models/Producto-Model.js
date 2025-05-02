@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 import SolicitudProducto from '../models/SolicitudProducto-Model.js';
 
-
-
 // Registrar modelos auxiliares primero
 const generarIdUnico = async (modelName, campoId) => {
   let id;
@@ -36,13 +34,22 @@ const historialInventarioSchema = new mongoose.Schema({
   cantidad: { type: Number, required: true },
   tipoMovimiento: {
     type: String,
-    enum: ['Entrada de Stock', 'Salida de Stock'],
+    enum: ['Entrada', 'Salida'],
     required: true
   },
   motivo: {
     type: String,
-    enum: ['Nuevo Producto', 'ReStock', 'Merma/Pérdida', 'Venta a Cliente', 'Devolución'],
+    enum: ['Nuevo Producto', 'ReStock', 'Merma o Perdida', 'Venta a Cliente', 'Devolución'],
     required: true
+  },
+  detalles:
+   { 
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
+    solicitudId: Number,
+    pedidoId: Number,
+    cliente: String,
+    nota: String, 
   },
   fechaMovimiento: { type: Date, default: Date.now },
   usuarioId: { type: Number, required: true }

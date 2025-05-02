@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
 // Importar tus Styled Components base
-import { TextBox } from "../Componentes/TextComponent";
+import { TextBox, Label } from "../Componentes/TextComponent";
 import Button from "../Componentes/Button";
 import { Table, Th, Td } from "../Componentes/Table";
 import DropBox from "../Componentes/DropBox";
@@ -50,11 +50,6 @@ export const FormRow = styled.div`
   margin-top: 15px;
 `;
 
-export const Label = styled.label`
-  font-weight: bold;
-  margin-bottom: 5px;
-  display: block;
-`;
 
 export const Select = styled.select`
   padding: 8px;

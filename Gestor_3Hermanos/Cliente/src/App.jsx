@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 
 // Páginas
+
 import LoginGE from './Paginas/LoginGE';
 import Home from './Paginas/Home';
 import Inventario from './Paginas/Inventario';
@@ -12,6 +13,7 @@ import GestionPedidos from './Paginas/GestionPedidos';
 import Caja from './Paginas/Caja';
 import GestionUsuarios from './Paginas/GestionUsuarios';
 import GestionProveedores from './Paginas/GestionProveedores';
+import SolicitudProductos from "./Paginas/SolicitudProductos";
 import PedidosRepartidor from './Paginas/PedidosRepartidor';
 import MainContainer from './Componentes/MainContainer';
 
@@ -46,6 +48,7 @@ function App() {
               <Route path="/caja" element={<Caja />} />
               <Route path="/gestion-pedidos" element={<GestionPedidos />} />
               <Route path="/gestion-proveedores" element={<GestionProveedores />} />
+              <Route path='/SolicitudProducto' element={<SolicitudProductos />} />
             </>
           )}
 

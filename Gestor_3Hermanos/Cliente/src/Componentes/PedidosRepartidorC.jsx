@@ -30,7 +30,7 @@ function PedidosRepartidorC({ pedidos = [] }) {
         transferencia: transferData[index] || {},
       };
 
-      const response = await fetch("http://localhost:3000/api/pedidos/${pedido.id}", {
+      const response = await fetch(`http://localhost:3000/api/pedidos/${pedido.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +66,6 @@ function PedidosRepartidorC({ pedidos = [] }) {
 
         return (
           <li key={pedido.id} className="pedido-item">
-            {/* Resumen (siempre visible) */}
             <div className="summary-card">
               <div className="summary-content">
                 <p className="direccion">{pedido.direccion}</p>
@@ -85,7 +84,6 @@ function PedidosRepartidorC({ pedidos = [] }) {
               </div>
             </div>
 
-            {/* Detalle (expandible) */}
             <div className={`pedido-expandible ${isExpanded ? "abierto" : ""}`}>
               <div className="detail-card">
                 <div className="encabezado-detalle">
@@ -95,9 +93,7 @@ function PedidosRepartidorC({ pedidos = [] }) {
                     </p>
                   </div>
                   <div className="encabezado-der">
-                    <p className="fecha-entrega">
-                      Entrega: {fechaEntrega}
-                    </p>
+                    <p className="fecha-entrega">Entrega: {fechaEntrega}</p>
                   </div>
                 </div>
 
@@ -174,7 +170,7 @@ function PedidosRepartidorC({ pedidos = [] }) {
                     <label>
                       <input
                         type="radio"
-                        name={"metodo-pago-${index}"}
+                        name={`metodo-pago-${index}`}
                         value="Efectivo"
                         checked={selectedMethod === "Efectivo"}
                         onChange={() => handlePaymentMethodChange(index, "Efectivo")}
@@ -184,7 +180,7 @@ function PedidosRepartidorC({ pedidos = [] }) {
                     <label>
                       <input
                         type="radio"
-                        name={"metodo-pago-${index}"}
+                        name={`metodo-pago-${index}`}
                         value="Tarjeta"
                         checked={selectedMethod === "Tarjeta"}
                         onChange={() => handlePaymentMethodChange(index, "Tarjeta")}
