@@ -54,6 +54,8 @@ const historialInventarioSchema = new mongoose.Schema({
   fechaMovimiento: { type: Date, default: Date.now },
   usuarioId: { type: Number, required: true }
 });
+mongoose.model('HistorialInventario', historialInventarioSchema);
+
 
 historialInventarioSchema.pre('save', async function (next) {
   if (!this.historialId) {
@@ -71,7 +73,7 @@ const productoSchema = new mongoose.Schema({
     validate: (v) => /^\d{4}$/.test(v.toString())
   },
   nombre: { type: String, required: true },
-  descripcion: { type: String, required: true },
+  descripcion: { type: String},
   precio: { type: Number, required: true },
   stock: { type: Number, required: true },
   proveedor: {

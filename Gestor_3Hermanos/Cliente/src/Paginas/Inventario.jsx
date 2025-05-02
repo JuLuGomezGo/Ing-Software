@@ -144,6 +144,8 @@ function GestionInventario() {
 
             const response = await fetch(`${API_URL}/${endpoint}`, options);
             const data = await response.json();
+            console.log(data); // Para ver la respuesta completa y el mensaje de error
+
 
             if (!response.ok) {
                 throw new Error(data.error || "Error en la solicitud");
@@ -171,7 +173,7 @@ function GestionInventario() {
 
 
 
-const handleGuardarProducto = async (producto) => {
+const handleGuardarProducto = async (producto) => { 
   if (!producto) {
     console.error("Producto no definido en handleGuardarProducto");
     return;
@@ -201,18 +203,20 @@ const handleGuardarProducto = async (producto) => {
       };
     }
   }
-
+  
   try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(body)
-    });
+      const response = await fetch(url, {
+          method,
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(body)
+        });
+        console.log("Datos a enviar:", response);
 
     const data = await response.json();
+    console.log(data); 
     if (!response.ok) throw new Error(data.message || "Error al actualizar");
 
     // Actualizar lista de productos localmente

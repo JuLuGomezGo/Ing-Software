@@ -352,7 +352,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
             const movimiento = {
                 cantidad: item.cantidad,
                 tipoMovimiento: "Entrada",
-                motivo: item.nombreTemporal ? "NuevoProducto" : "ReStock",
+                motivo: item.nombreTemporal ? "Nuevo Producto" : "ReStock",
                 usuarioId,
                 fechaMovimiento: new Date().toISOString(),
                 solicitudId: solicitudSeleccionada.solicitudId
@@ -364,10 +364,14 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                     nombre: item.nombreTemporal,
                     descripcion: "", // vacía por ahora
                     precio: Number((item.costoUnitario * 1.2).toFixed(2)), // 20% margen
-                    stock: item.cantidad,
-                    proveedor: solicitudSeleccionada.proveedor.proveedorId,
-                    historialInventario: [...productoActual.historialInventario, movimiento]
+                    stock: Number(item.cantidad),
+                    proveedor: solicitudSeleccionada.proveedor._id,
+                    
+                    historialInventario: [movimiento]
+                    // historialInventario: [...productoActual.historialInventario, movimiento]   Anterior
                 };
+                console.log("Proveedor de la solicitud:", solicitudSeleccionada.proveedor);
+                console.log("Nuevo producto a guardar:", nuevoProducto);
 
                 await onSave(nuevoProducto); // Esto hace POST
 
