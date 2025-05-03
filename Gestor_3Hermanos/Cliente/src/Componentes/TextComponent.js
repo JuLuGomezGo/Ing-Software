@@ -1,39 +1,3 @@
-// import styled from "styled-components";
-
-// const TextBox = styled.input`
-//   padding: 10px;
-//   border: 2px solid #a96e3b;
-//   border-radius: 10px;
-//   font-size: 16px;
-//   // width: 100%;
-//   background-color: #ecd8bf;
-//   color: black;
-
-//   &:focus {
-//     border-color: #8b572a;
-//     outline: none;
-//   }
-// `;
-
-// const TextArea = styled.textarea`
-//   padding: 10px;
-//   border: 2px solid #a96e3b;
-//   border-radius: 10px;
-//   font-size: 16px;
-//   // width: 100%;
-//   height: 80px;
-//   background-color: #f9f4ee;
-//   color: black;
-//   resize: none;
-
-//   &:focus {
-//     border-color: #8b572a;
-//     outline: none;
-//   }
-// `;
-
-// export { TextBox, TextArea };
-
 
 // TextComponent.js
 import styled, { keyframes } from "styled-components";
@@ -41,6 +5,14 @@ import styled, { keyframes } from "styled-components";
 const popIn = keyframes`
   from { transform: scale(0.98); opacity: 0.9; }
   to { transform: scale(1); opacity: 1; }
+`;
+
+const Label = styled.label`
+  font-weight: bold;
+  color: #5d4037;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const TextBox = styled.input`
@@ -65,6 +37,12 @@ const TextBox = styled.input`
     animation: ${popIn} 0.2s ease-out;
     box-shadow: 0 0 0 3px rgba(169, 110, 59, 0.15);
   }
+    &:disabled {
+      background-color:#f2e6d7;
+      border-color:#a96e3b;
+      color:rgb(169, 163, 158);
+      cursor: not-allowed;
+    }
 `;
 
 const TextArea = styled.textarea`
@@ -93,4 +71,4 @@ const TextArea = styled.textarea`
   }
 `;
 
-export { TextBox, TextArea };
+export {Label, TextBox, TextArea };

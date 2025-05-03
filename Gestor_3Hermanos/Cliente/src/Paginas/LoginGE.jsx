@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import logo from '../Componentes/Iconos/LogoTexto.png';
 import Button from '../Componentes/Button';
-import { TextBox } from '../Componentes/TextComponent';
+import { TextBox, Label } from '../Componentes/TextComponent';
 import MainContainer from '../Componentes/MainContainer';
 
 const Container = styled.div`
@@ -84,13 +84,6 @@ const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-`;
-
-const Label = styled.label`
-  color: #ff6a00;
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-bottom: 5px;
 `;
 
 const ErrorMessage = styled.p`
