@@ -19,8 +19,8 @@ function PedidosRepartidor() {
         }
         const data = await response.json();
 
-        console.log("Estados recibidos:", data.map(p => "${p.estado}")); // depuración
-
+        console.log("Estados recibidos:", data.map(p => `"${p.estado}"`)); // depuración
+        
         setPedidos(data);
       } catch (error) {
         console.error("Error al obtener pedidos:", error);
