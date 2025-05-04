@@ -245,26 +245,27 @@ router.post('/login', async (req, res) => {
 ///////////////////////////fin de kevin
 
 
-
-
-//obtener pedidos y productos por ID
+// Obtener pedidos y productos por ID
 router.get('/caja/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Primero buscamos si el ID corresponde a un pedido
+    // Buscar si el ID corresponde a un pedido
     const pedido = await Pedido.findOne({ pedidoId: Number(id) });
     if (pedido) {
+      const nombresProductos = pedido.productos.map(p => p.nombre).join(', ');
+      const total = pedido.total;
+
       return res.json({
         referencia: pedido.pedidoId,
         motivo: "Cobro Pedido",
         nombreProveedorCliente: pedido.cliente,
-        producto: pedido.productos?.[0]?.nombre || "",
-        monto: pedido.total
+        producto: nombresProductos,
+        monto: total
       });
     }
 
-    // Si no es pedido, probamos si es un producto
+    // Buscar si el ID corresponde a un producto
     const producto = await Producto.findOne({ productoId: Number(id) }).populate('proveedor');
     if (producto) {
       return res.json({
@@ -276,7 +277,7 @@ router.get('/caja/:id', async (req, res) => {
       });
     }
 
-    // Si no se encontró en pedidos ni productos
+    // Si no se encontró
     return res.status(404).json({ message: 'No se encontró ni pedido ni producto con ese ID' });
   } catch (error) {
     console.error("Error en búsqueda de ID:", error);
