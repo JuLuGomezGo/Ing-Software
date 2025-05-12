@@ -36,6 +36,7 @@ function GestionPedidos() {
     // Estados
     const [productos, setProductos] = useState([]);
     const [pedidos, setPedidos] = useState([]);
+    const [tipoPedido, setTipoPedido] = useState("domicilio"); // Nuevo estado para el tipo de pedido
     const [formData, setFormData] = useState({
         cliente: '',
         direccionEntrega: '',
@@ -126,13 +127,6 @@ function GestionPedidos() {
         e.preventDefault();
         setIsLoading(true);
 
-        // Validaciones
-        // if (!formData.cliente || !formData.direccionEntrega || !formData.telefono) {
-        //     toast.error('Complete todos los datos del cliente');
-        //     setIsLoading(false);
-        //     return;
-        // }
-
         if (items.some(item => Number(item.productoId) <= 0 || item.cantidad <= 0)) {
             toast.error('Complete correctamente todos los productos');
             setIsLoading(false);
@@ -156,6 +150,8 @@ function GestionPedidos() {
                 body: JSON.stringify({
                     pedidoId,
                     ...formData,
+                    cliente: tipoPedido === "local" ? "local" : formData.cliente, // Añadir "local" si corresponde
+                    direccionEntrega: tipoPedido === "local" ? "local" : formData.direccionEntrega,
                     productos: productosParaEnviar,
                     total,
                     estado: 'Pendiente',
@@ -191,6 +187,8 @@ function GestionPedidos() {
                 usuarioId: 1
             });
 
+            setTipoPedido("domicilio"); // Resetear tipo de pedido
+
             // Actualizar lista de pedidos
             const pedidosRes = await fetch('http://localhost:3000/api/pedidos');
             const pedidosData = await pedidosRes.json();
@@ -211,6 +209,19 @@ function GestionPedidos() {
 
                 <SubTitle stitle={"Nuevo Pedido"}></SubTitle>
                 <form onSubmit={handleSubmit}>
+                    {/* Tipo de Pedido */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <Label>Tipo de Pedido:</Label>
+                        <DropBox
+                            value={tipoPedido}
+                            onChange={(e) => setTipoPedido(e.target.value)}
+                            disabled={isLoading}
+                        >
+                            <option value="domicilio">Domicilio</option>
+                            <option value="local">Local</option>
+                        </DropBox>
+                    </div>
+
                     {/* Sección de productos */}
                     <div style={{ marginBottom: '20px' }}>
                         <h3>Detalles de Pedido</h3>
@@ -279,7 +290,7 @@ function GestionPedidos() {
                                     value={formData.cliente}
                                     onChange={(e) => setFormData({ ...formData, cliente: e.target.value })}
                                     required
-                                    disabled={isLoading}
+                                    disabled={isLoading || tipoPedido === "local"} // Bloquear si es "local"
                                 />
                             </div>
 
@@ -303,7 +314,7 @@ function GestionPedidos() {
                                     value={formData.direccionEntrega}
                                     onChange={(e) => setFormData({ ...formData, direccionEntrega: e.target.value })}
                                     required
-                                    disabled={isLoading}
+                                    disabled={isLoading || tipoPedido === "local"} // Bloquear si es "local"
                                 />
                             </div>
 
@@ -314,7 +325,7 @@ function GestionPedidos() {
                                     value={formData.telefono}
                                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                                     required
-                                    disabled={isLoading}
+                                    disabled={isLoading || tipoPedido === "local"} // Bloquear si es "local"
                                 />
                             </div>
 
@@ -323,7 +334,7 @@ function GestionPedidos() {
                                 <DateBox
                                     value={formData.fecha}
                                     onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-                                    disabled={isLoading}
+                                    disabled={isLoading || tipoPedido === "local"} // Bloquear si es "local"
                                 />
                             </div>
 
@@ -332,7 +343,7 @@ function GestionPedidos() {
                                 <TimeBox
                                     value={formData.hora}
                                     onChange={(e) => setFormData({ ...formData, hora: e.target.value })}
-                                    disabled={isLoading}
+                                    disabled={isLoading || tipoPedido === "local"} // Bloquear si es "local"
                                 />
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 import express from 'express';
 import Pedido from '../models/Pedido-Model.js';
 import Usuario from '../models/Usuario-Model.js'; // Asegurate que este modelo exista
+import Producto from '../models/Producto-Model.js';
 
 const router = express.Router();
 
@@ -36,23 +37,47 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Ya existe un pedido con ese ID' });
     }
 
-    // // Validar existencia de usuario
-    // const usuario = await Usuario.findOne({ usuarioId });
-    // if (!usuario) {
-    //   return res.status(404).json({ error: 'Usuario no encontrado' });
-    // }
-
     // Validar que haya productos
     if (!productos || productos.length === 0) {
       return res.status(400).json({ error: 'Debe incluir al menos un producto' });
     }
 
-    // Calcular total
+    // Calcular total y actualizar inventario
     let total = 0;
-    productos.forEach(p => {
-      total += p.cantidad * p.precioUnitario;
-    });
+    for (const productoPedido of productos) {
+      const producto = await Producto.findOne({ productoId: productoPedido.productoId });
+      if (!producto) {
+        return res.status(404).json({ error: `Producto con ID ${productoPedido.productoId} no encontrado` });
+      }
 
+      // Validar stock suficiente
+      if (producto.stock < productoPedido.cantidad) {
+        return res.status(400).json({ error: `Stock insuficiente para el producto ${producto.nombre}` });
+      }
+
+      // Descontar del inventario
+      producto.stock -= productoPedido.cantidad;
+
+      // Registrar movimiento en el historial de inventario
+      producto.historialInventario.push({
+        cantidad: productoPedido.cantidad,
+        tipoMovimiento: 'Salida',
+        motivo: 'Venta a Cliente',
+        detalles: {
+          pedidoId: pedidoId,
+          cliente: usuarioId
+        },
+        usuarioId: usuarioId
+      });
+
+      // Guardar cambios en el producto
+      await producto.save();
+
+      // Calcular el total del pedido
+      total += productoPedido.cantidad * productoPedido.precioUnitario;
+    }
+
+    // Crear el nuevo pedido
     const nuevoPedido = new Pedido({
       ...req.body,
       total,
@@ -62,7 +87,8 @@ router.post('/', async (req, res) => {
     await nuevoPedido.save();
     res.status(201).json(nuevoPedido);
   } catch (error) {
-    res.status(400).json({ error: 'Error al crear pedido', detalles: error.message });
+    console.error('Error al crear pedido:', error);
+    res.status(500).json({ error: 'Error al crear pedido', detalles: error.message });
   }
 });
 
@@ -129,6 +155,5 @@ router.get('/:id/mapa', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener la dirección', detalles: error.message });
   }
 });
-
 
 export default router;
