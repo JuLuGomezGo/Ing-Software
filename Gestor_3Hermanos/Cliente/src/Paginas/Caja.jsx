@@ -69,6 +69,15 @@ const ToggleArrow = styled.button`
   font-size: 1.4rem;
   cursor: pointer;
 `;
+const StaticTable = styled.div`
+  position: sticky;
+  top: 0;
+  background-color: #f9f4ee;
+  z-index: 10;
+  padding: 1rem;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+`;
 
 /* ================================================================================= */
 
@@ -234,36 +243,76 @@ const Caja = () => {
   };
 
   const generarPDF = () => {
-    /* … tu código existente sin cambios … */
-  };
+      const doc = new jsPDF();
+      // Filtra los movimientos que estén dentro del rango de fechas seleccionadas
+      const movimientosFiltrados = movimientosCaja.filter(mov => {
+        const fecha = new Date(mov.fechaHora).toISOString().split("T")[0];
+        return fecha >= fechaInicio && fecha <= fechaFin;  // Filtra por las fechas de corte
+      });
+      doc.setFontSize(18).setFont("helvetica", "bold");
+      doc.text("Soporte Financiero Mensual", 105, 20, null, null, "center");
+      doc.setFontSize(12).setFont("helvetica", "normal");
+      doc.text(`Desde: ${fechaInicio}    Hasta: ${fechaFin}`, 105, 30, null, null, "center");
+      let y = 45;
+      let totalEntradas = 0, totalSalidas = 0;
+      // Recorre los movimientos filtrados y genera el contenido del PDF
+      movimientosFiltrados.forEach((mov) => {
+        const tipo = mov.motivo === "Cobro Pedido" ? "📥 Entrada" : "📤 Salida";
+        if (mov.motivo === "Cobro Pedido") totalEntradas += mov.monto;
+        else totalSalidas += mov.monto;
+        doc.setDrawColor(180).setLineWidth(0.1).line(14, y - 4, 195, y - 4);
+        doc.setFont("helvetica", "bold").text(tipo, 105, y, null, null, "center");
+        doc.setFont("helvetica", "normal");
+        y += 6;
+        doc.text(`Usuario: ${mov.usuario}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Referencia: ${mov.referencia}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Motivo: ${mov.motivo}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Nombre: ${mov.nombreProveedorCliente}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Producto: ${mov.producto}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Total: $${mov.monto.toFixed(2)}`, 105, y, null, null, "center");
+        y += 6;
+        doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 105, y, null, null, "center");
+        y += 12;
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+      doc.line(14, y - 4, 195, y - 4);
+      const balance = totalEntradas - totalSalidas;
+      y += 10;
+      doc.setFont("helvetica", "bold").text("Resumen Financiero:", 105, y, null, null, "center");
+      doc.setFont("helvetica", "normal");
+      y += 8;
+      doc.text(`Total Entradas (📥): $${totalEntradas.toFixed(2)}`, 105, y, null, null, "center");
+      y += 8;
+      doc.text(`Total Salidas (📤): $${totalSalidas.toFixed(2)}`, 105, y, null, null, "center");
+      y += 8;
+      doc.text(`Balance: $${balance.toFixed(2)}`, 105, y, null, null, "center");
+      doc.save(`Reporte_${fechaInicio}_al_${fechaFin}.pdf`);
+    };
 
   /* ---------- render ---------- */
   return (
     <MainContainer>
       <Header />
       <Container>
-        {/* filtro lateral */}
         <SidebarButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          ☰ Filtrar Rango
+          ☰ Corte de Caja
         </SidebarButton>
         <Sidebar isOpen={isSidebarOpen}>
-          <Cont_lbl>
-            <Label>
-              📅 Fecha: <DateBox value={date} readOnly />
-            </Label>
-            <Label>
-              ⏰ Hora: <TimeBox value={time} readOnly />
-            </Label>
-            <Label>
-              📆 Desde:{" "}
-              <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-            </Label>
-            <Label>
-              📆 Hasta:{" "}
-              <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
-            </Label>
-            <Button onClick={generarPDF}>📄 Exportar PDF por Rango</Button>
-          </Cont_lbl>
+      <Cont_lbl>
+        <Label>📅 Fecha actual: <DateBox value={date} readOnly /></Label>
+        <Label>⏰ Hora actual: <TimeBox value={time} readOnly /></Label>
+        <Label>📆 Reporte del: <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} /></Label>
+        <Label>📆 al: <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} /></Label>
+        <Button onClick={generarPDF}>📄 Generar reporte</Button>
+      </Cont_lbl>
         </Sidebar>
 
         {/* formulario */}
@@ -288,64 +337,56 @@ const Caja = () => {
           </Label>
 
         </Cont_inputs>
+<StaticTable>
+  <Table>
+    <thead>
+      <tr>
+        <Th>ID Pedido</Th>
+        <Th>Producto</Th>
+        <Th>Nombre</Th>
+        <Th>Motivo</Th>
+        <Th>Total</Th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <Td>{formData.pedidoId || "—"}</Td>
+        <Td>{detallesPedido?.producto || "—"}</Td>
+        <Td>{detallesPedido?.nombreProveedorCliente || "—"}</Td>
+        <Td>{detallesPedido?.motivo || "—"}</Td>
+        <Td>{detallesPedido ? `$${detallesPedido.monto}` : "—"}</Td>
+      </tr>
+    </tbody>
+  </Table>
+</StaticTable>
 
-        <Button variant="primary" onClick={handleRegister}>
-          💾 Registrar Movimiento
-        </Button>
-
-        {/* detalles de pedido -------------------------- */}
-        <ToggleArrow onClick={() => setShowDetalles((s) => !s)}>
-          {showDetalles ? "▲" : "▼"}
-        </ToggleArrow>
-        <DetallesWrapper open={showDetalles}>
-          {detallesPedido && (
-            <Table>
-              <thead>
-                <tr>
-                  <Th>ID PEDIDO</Th>
-                  <Th>PRODUCTO</Th>
-                  <Th>NOMBRE</Th>
-                  <Th>MOTIVO</Th>
-                  <Th>TOTAL</Th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <Td>{formData.pedidoId}</Td>
-                  <Td>{detallesPedido.producto}</Td>
-                  <Td>{detallesPedido.nombreProveedorCliente}</Td>
-                  <Td>{detallesPedido.motivo}</Td>
-                  <Td>${detallesPedido.monto?.toFixed(2)}</Td>
-                </tr>
-              </tbody>
-            </Table>
-          )}
-        </DetallesWrapper>
-
-        {/* movimientos de caja (tabla principal) */}
+        <Button variant="primary" onClick={handleRegister}>💾 Registrar Movimiento</Button>
         <Table>
           <thead>
             <tr>
-              <Th>Usuario</Th>
-              <Th>ID</Th>
-              <Th>Motivo</Th>
-              <Th>Cliente / Proveedor</Th>
+              <Th>ID Pedido</Th>
               <Th>Producto</Th>
-              <Th>Monto</Th>
-              <Th>Fecha/Hora</Th>
+              <Th>Motivo</Th>
+              <Th>Nombre</Th>
+              <Th>Total</Th>
+              <Th>Fecha</Th>
             </tr>
           </thead>
           <tbody>
-            {movimientosCaja.map((mov, i) => (
-              <tr key={i}>
-                <Td>{mov.usuario}</Td>
-                <Td>{mov.referencia}</Td>
-                <Td>{mov.motivo}</Td>
-                <Td>{mov.nombreProveedorCliente}</Td>
-                <Td>{mov.producto}</Td>
-                <Td>${mov.monto.toFixed(2)}</Td>
-                <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
-              </tr>
+            {movimientosCaja
+              .filter(mov => {
+                const fechaMov = new Date(mov.fechaHora).toISOString().split("T")[0];
+                return fechaMov >= fechaInicio && fechaMov <= fechaFin;
+              })
+              .map((mov, index) => (
+                <tr key={index}>
+                  <Td>{mov.referencia}</Td>
+                  <Td>{mov.producto}</Td>
+                  <Td>{mov.motivo}</Td>
+                  <Td>{mov.nombreProveedorCliente}</Td>
+                  <Td>${mov.monto}</Td>
+                  <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
+                </tr>
             ))}
           </tbody>
         </Table>
@@ -353,5 +394,4 @@ const Caja = () => {
     </MainContainer>
   );
 };
-
 export default Caja;
