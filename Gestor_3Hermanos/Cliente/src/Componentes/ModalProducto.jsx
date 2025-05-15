@@ -338,7 +338,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 solicitud: selected
             });
         } else {
-            setSolicitudSeleccionada(null); // Si no se encuentra, asegúrate de limpiar el estado
+            setSolicitudSeleccionada(null); 
         }
     };
 

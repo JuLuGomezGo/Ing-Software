@@ -95,7 +95,7 @@ router.get('/', async (req, res) => {
 // Obtener una solicitud por ID
 router.get('/:id', async (req, res) => {
   try {
-    // Buscar la solicitud por solicitudId (no _id de MongoDB)
+    // Buscar la solicitud por solicitudId
     const solicitud = await SolicitudProducto.findOne({ solicitudId: req.params.id })
       .populate('proveedor', 'nombre contacto email') // Solo para proveedor
       .lean(); // Para poder modificar
@@ -238,7 +238,7 @@ router.patch('/:id/recibir', async (req, res) => {
 router.patch('/:id/estado', async (req, res) => {
   const { estado } = req.body;
 
-  if (!['Pendiente', 'Enviado', 'Recibido', 'Cancelado'].includes(estado)) {
+  if (!['Pendiente', 'Enviado', 'Recibido', 'Cancelado', 'Pagado'].includes(estado)) {
     return res.status(400).json({ error: "Estado inválido" });
   }
 

@@ -36,7 +36,7 @@ const solicitudSchema = new mongoose.Schema({
   fechaSolicitud: { type: Date, default: Date.now },
   estado: {
     type: String,
-    enum: ['Pendiente', 'Enviado', 'Recibido', 'Cancelado'],
+    enum: ['Pendiente', 'Enviado', 'Recibido', 'Cancelado', 'Pagado'],
     default: 'Pendiente',
     required: true
   },

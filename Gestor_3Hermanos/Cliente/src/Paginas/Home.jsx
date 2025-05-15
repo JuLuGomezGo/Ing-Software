@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import Header from "../Componentes/Header";
@@ -12,27 +12,48 @@ import productoIcon from "../Componentes/Iconos/productoIcon.png";
 import vermasIcon from "../Componentes/Iconos/details.png";
 import pricelcon from "../Componentes/Iconos/priceIcon.png";
 import nuevoPedido from "../Componentes/Iconos/nuevoPedido.png";
+import iconSearch from "../Componentes/Iconos/buscar.png";
 
-// --------------------- ESTILOS ---------------------
-const TopSection = styled.div`
-  display: flex;
+import iconPendiente from "../Componentes/Iconos/pendienteColor.png";
+import iconEnProceso from "../Componentes/Iconos/preparandoColor.png";
+import iconListo from "../Componentes/Iconos/listoColor.png";
+import iconEnCamino from "../Componentes/Iconos/repartoColor.png";
+import iconEntregado from "../Componentes/Iconos/entregadoColor.png";
+import iconPagado from "../Componentes/Iconos/nopagadoColor.png";
+
+const estadoIconos = {
+  Pendiente: iconPendiente,
+  "En proceso": iconEnProceso,
+  "Listo para entrega": iconListo,
+  "En camino": iconEnCamino,
+  Entregado: iconEntregado,
+  Pagado: iconPagado,
+};
+
+// ---------- ESTILOS ----------
+const Ventana = styled.div`
+  padding: 20px;
+  background-color: #fff0f5;
+  border-radius: 12px;
+  margin-top: 20px;
+  box-sizing: border-box;
+`;
+
+const MainLayout = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 20px;
-  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
-const SmallTableContainer = styled.div`
-  flex: 1;
+const TableContainer = styled.div`
   border: 1px solid #ccc;
   padding: 16px;
   border-radius: 8px;
   background-color: #f9f4ee;
-`;
-
-const LargeTableContainer = styled.div`
-  border: 1px solid #ccc;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #f9f4ee;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 const ModalOverlay = styled.div`
@@ -41,7 +62,7 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -54,228 +75,212 @@ const ModalContent = styled.div`
   border-radius: 10px;
 `;
 
-const StyledInput = styled.input`
-  width: 100%;
+const EstadoBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
   padding: 8px;
-  margin-bottom: 10px;
-  border-radius: 8px;
   border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 8px;
 `;
-// --------------------------------------------------
+
+const Botonera = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+`;
+
+const SearchBarContainer = styled.div`
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 4px 10px;
+  margin-bottom: 10px;
+`;
+
+const SearchIcon = styled.img`
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+`;
+
+const SearchInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  flex: 1;
+`;
+// -----------------------------
 
 function Home() {
   const navigate = useNavigate();
-
   const [productosDisponibles, setProductosDisponibles] = useState([]);
+  const [filtroProducto, setFiltroProducto] = useState("");
   const [movimientosCaja, setMovimientosCaja] = useState([]);
   const [pedidos, setPedidos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
 
-  // Productos
   useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/productos");
-        const result = await response.json();
-        if (result.success) {
-          setProductosDisponibles(result.data);
-        } else {
-          console.error("Error al obtener productos:", result.error);
+    fetch("http://localhost:3000/api/productos")
+      .then(res => res.json())
+      .then(res => res.success && setProductosDisponibles(res.data));
+
+    fetch("http://localhost:3000/api/usuarios")
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          const movimientos = res.data.flatMap(u => u.caja || []);
+          movimientos.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+          setMovimientosCaja(movimientos.slice(0, 2));
         }
-      } catch (error) {
-        console.error("Error de fetch productos:", error);
-      }
-    };
-    fetchProductos();
-  }, []);
+      });
 
-  // Movimientos de Caja
-  useEffect(() => {
-    const fetchCajaMovimientos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/usuarios");
-        if (!response.ok) throw new Error(`Error al obtener usuarios. Status: ${response.status}`);
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const allMovimientos = result.data.reduce((acc, usuario) => {
-            if (usuario.caja && Array.isArray(usuario.caja)) {
-              return acc.concat(usuario.caja);
-            }
-            return acc;
-          }, []);
-          allMovimientos.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
-          setMovimientosCaja(allMovimientos.slice(0, 2));
-        }
-      } catch (error) {
-        console.error("Error al obtener caja movimientos:", error);
-      }
-    };
-    fetchCajaMovimientos();
+    fetch("http://localhost:3000/api/Pedidos")
+      .then(res => res.json())
+      .then(setPedidos);
   }, []);
-
-  // Pedidos
-  useEffect(() => {
-    const fetchPedidos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/Pedidos");
-        if (!response.ok) throw new Error(`Error al obtener pedidos. Status: ${response.status}`);
-        const data = await response.json();
-        setPedidos(data);
-      } catch (error) {
-        console.error("Error al obtener pedidos:", error);
-      }
-    };
-    fetchPedidos();
-  }, []);
-
-  const handleConsultar = (pedido) => {
-    setSelectedPedido(pedido);
-    setShowModal(true);
-  };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedPedido(null);
   };
 
-  const productosFiltrados = productosDisponibles.filter((prod) =>
-    prod.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  const updateEstado = async (nuevoEstado) => {
+    if (!selectedPedido) return;
+    try {
+      const response = await fetch(`http://localhost:3000/api/pedidos/${selectedPedido.pedidoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+      if (response.ok) {
+        const updated = { ...selectedPedido, estado: nuevoEstado };
+        setSelectedPedido(updated);
+        setPedidos(prev => prev.map(p => p.pedidoId === updated.pedidoId ? updated : p));
+        setShowEstadoModal(false);
+        setShowModal(true);
+      }
+    } catch (error) {
+      console.error("Error actualizando estado:", error);
+    }
+  };
+
+  const productosFiltrados = productosDisponibles.filter(p =>
+    p.nombre.toLowerCase().includes(filtroProducto.toLowerCase())
   );
 
   return (
     <MainContainer>
       <Header />
       <h2>HOME</h2>
+      <Ventana>
+        <MainLayout>
+          <div>
+            <TableContainer>
+              <SubTittle stitle="Pedidos" ancho="completo" icono={nuevoPedido} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/gestion-pedidos")} />
+              <Table>
+                <thead>
+                  <Tr>
+                    <Th># Pedido</Th>
+                    <Th>Cliente</Th>
+                    <Th>Estado</Th>
+                    <Th>Total</Th>
+                    <Th>Fecha</Th>
+                  </Tr>
+                </thead>
+                <tbody>
+                  {pedidos.map((pedido) => (
+                    <Tr key={pedido.pedidoId} onClick={() => { setSelectedPedido(pedido); setShowModal(true); }}>
+                      <Td>{pedido.pedidoId}</Td>
+                      <Td>{pedido.cliente}</Td>
+                      <EstadoVisual estado={pedido.estado} />
+                      <Td>${pedido.total?.toFixed(2)}</Td>
+                      <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableContainer>
+          </div>
 
-      <TopSection>
-        {/* Productos Disponibles */}
-        <SmallTableContainer>
-          <SubTittle 
-            stitle="Productos Disponibles"
-            ancho="Completo"
-            icono={productoIcon}
-            setButton={true}
-            btnIcon={vermasIcon}
-            buttonText={"Ver más >"}
-            onClick={() => navigate('/Inventario')}
-          />
+          <div>
+            <TableContainer>
+              <SubTittle stitle="Productos Disponibles" ancho="completo" icono={productoIcon} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/Inventario")} />
+              <SearchBarContainer>
+                <SearchIcon src={iconSearch} alt="Buscar" />
+                <SearchInput
+                  type="text"
+                  placeholder="Buscar producto..."
+                  value={filtroProducto}
+                  onChange={(e) => setFiltroProducto(e.target.value)}
+                />
+              </SearchBarContainer>
+              <Table>
+                <thead>
+                  <Tr>
+                    <Th>Producto</Th>
+                    <Th>Stock</Th>
+                    <Th>Costo/Kg</Th>
+                  </Tr>
+                </thead>
+                <tbody>
+                  {productosFiltrados.map((prod) => (
+                    <Tr key={prod._id}>
+                      <Td>{prod.nombre}</Td>
+                      <Td>{prod.stock} kg</Td>
+                      <Td>${prod.precio}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableContainer>
 
-          {/* Barra de búsqueda funcional */}
-          <StyledInput
-            type="text"
-            placeholder="Buscar producto..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            <TableContainer>
+              <SubTittle stitle="Movimientos de Caja" ancho="completo" icono={pricelcon} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/Caja")} />
+              <Table>
+                <thead>
+                  <Tr>
+                    <Th>#Referencia</Th>
+                    <Th>Motivo</Th>
+                    <Th>Monto</Th>
+                    <Th>Fecha/Hora</Th>
+                  </Tr>
+                </thead>
+                <tbody>
+                  {movimientosCaja.map((mov) => (
+                    <Tr key={mov.cajaId}>
+                      <Td>{mov.referencia}</Td>
+                      <Td>{mov.motivo}</Td>
+                      <Td>${mov.monto}</Td>
+                      <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableContainer>
+          </div>
+        </MainLayout>
+      </Ventana>
 
-          <Table>
-            <thead>
-              <Tr>
-                <Th>Producto</Th>
-                <Th>Stock</Th>
-                <Th>Costo/Kg</Th>
-              </Tr>
-            </thead>
-            <tbody>
-              {productosFiltrados.map((prod) => (
-                <Tr key={prod._id}>
-                  <Td>{prod.nombre}</Td>
-                  <Td>{prod.stock} kg</Td>
-                  <Td>${prod.precio}</Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
-        </SmallTableContainer>
-
-        {/* Movimientos de Caja */}
-        <SmallTableContainer>
-          <SubTittle 
-            stitle="Movimientos de Caja"
-            ancho="Completo"
-            icono={pricelcon}
-            setButton={true}
-            btnIcon={vermasIcon}
-            buttonText={"Ver más >"}
-            onClick={() => navigate('/Caja')}
-          />
-          <Table>
-            <thead>
-              <Tr>
-                <Th>#Referencia</Th>
-                <Th>Motivo</Th>
-                <Th>Monto</Th>
-                <Th>Fecha/Hora</Th>
-              </Tr>
-            </thead>
-            <tbody>
-              {movimientosCaja.map((mov) => (
-                <Tr key={mov.cajaId}>
-                  <Td>{mov.referencia}</Td>
-                  <Td>{mov.motivo}</Td>
-                  <Td>${mov.monto}</Td>
-                  <Td>{mov.fechaHora ? new Date(mov.fechaHora).toLocaleString() : ""}</Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
-        </SmallTableContainer>
-      </TopSection>
-
-      {/* Pedidos */}
-      <LargeTableContainer>
-        <SubTittle 
-          stitle="Pedidos"
-          ancho="Completo"
-          icono={nuevoPedido}
-          setButton={true}
-          btnIcon={vermasIcon}
-          buttonText={"Ver más >"}
-          onClick={() => navigate('/gestion-pedidos')}
-        />
-        <Table>
-          <thead>
-            <Tr>
-              <Th># Pedido</Th>
-              <Th>Cliente</Th>
-              <Th>Estado</Th>
-              <Th>Total</Th>
-              <Th>Fecha</Th>
-            </Tr>
-          </thead>
-          <tbody>
-            {pedidos.map((pedido) => (
-              <Tr 
-                key={pedido.pedidoId}
-                onClick={() => setSelectedPedido(pedido)}
-                className={selectedPedido?.pedidoId === pedido.pedidoId ? "selected" : ""}
-              >
-                <Td>{pedido.pedidoId}</Td>
-                <Td>{pedido.cliente}</Td>
-                <EstadoVisual estado={pedido.estado} />
-                <Td>${pedido.total?.toFixed(2)}</Td>
-                <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
-              </Tr>
-            ))}
-          </tbody>
-        </Table>
-      </LargeTableContainer>
-
-      {/* Modal Detalle Pedido */}
       {showModal && selectedPedido && (
         <ModalOverlay>
           <ModalContent>
             <h3>Detalles del Pedido</h3>
             <p><strong>Pedido ID:</strong> {selectedPedido.pedidoId}</p>
             <p><strong>Estado:</strong> {selectedPedido.estado}</p>
-            <p><strong>Fecha:</strong> {selectedPedido.fecha ? new Date(selectedPedido.fecha).toLocaleString() : "Sin fecha"}</p>
+            <p><strong>Fecha:</strong> {new Date(selectedPedido.fecha).toLocaleString()}</p>
             <p><strong>Cliente:</strong> {selectedPedido.cliente}</p>
             <p><strong>Dirección de Entrega:</strong> {selectedPedido.direccionEntrega}</p>
             <p><strong>Método de Pago:</strong> {selectedPedido.metodoPago}</p>
             <p><strong>Total:</strong> ${selectedPedido.total}</p>
-
             <h4>Productos en el Pedido</h4>
             {selectedPedido.productos?.length > 0 ? (
               <ul>
@@ -288,8 +293,30 @@ function Home() {
             ) : (
               <p>No hay productos</p>
             )}
+            <Botonera>
+              <Button onClick={() => setShowEstadoModal(true)}>Cambiar Estado</Button>
+              <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
+            </Botonera>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
-            <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
+      {showEstadoModal && (
+        <ModalOverlay>
+          <ModalContent>
+            <h3>Selecciona nuevo estado</h3>
+            {Object.entries(estadoIconos).map(([estado, icon]) => (
+              <EstadoBox key={estado} onClick={() => updateEstado(estado)}>
+                <img src={icon} alt={estado} width="20" height="20" />
+                {estado}
+              </EstadoBox>
+            ))}
+            <Button variant="secondary" onClick={() => {
+              setShowEstadoModal(false);
+              setShowModal(true);
+            }}>
+              Detalles del Pedido
+            </Button>
           </ModalContent>
         </ModalOverlay>
       )}
