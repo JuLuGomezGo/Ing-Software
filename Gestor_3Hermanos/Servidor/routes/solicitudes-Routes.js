@@ -95,20 +95,21 @@ router.get('/', async (req, res) => {
 // Obtener una solicitud por ID
 router.get('/:id', async (req, res) => {
   try {
-    // Buscar la solicitud por solicitudId
-    const solicitud = await SolicitudProducto.findOne({ solicitudId: req.params.id })
-      .populate('proveedor', 'nombre contacto email') // Solo para proveedor
-      .lean(); // Para poder modificar
+    // Buscar la solicitud por solicitudId (que es un número)
+    const solicitud = await SolicitudProducto.findOne({ solicitudId: Number(req.params.id) }).lean();
 
     if (!solicitud) {
       return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
     }
 
+    // Buscar proveedor por proveedorId
+    const proveedor = await Proveedor.findOne({ proveedorId: solicitud.proveedor }).lean();
+
     // Buscar todos los productos relacionados
     const productos = await Producto.find({}, 'productoId nombre precio').lean();
 
     // Enriquecer detalles de productos
-    const productosDetallados = sol.productos.map((p) => {
+    const productosDetallados = solicitud.productos.map((p) => {
       const prodInfo = productos.find(prod => prod.productoId === p.productoId);
       return {
         ...p,
@@ -123,6 +124,7 @@ router.get('/:id', async (req, res) => {
       success: true,
       data: {
         ...solicitud,
+        proveedor: proveedor || { nombre: 'Proveedor desconocido' },
         productos: productosDetallados
       }
     });

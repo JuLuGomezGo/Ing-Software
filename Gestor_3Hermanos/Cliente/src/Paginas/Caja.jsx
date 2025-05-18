@@ -87,6 +87,7 @@ const Caja = () => {
   const [pendingOrders, setPendingOrders] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState(null);
   const [showDetalles, setShowDetalles] = useState(false);
+  const [pendingSolicitudes, setPendingSolicitudes] = useState([]);
 
   const [formData, setFormData] = useState({
     pedidoId: "",
@@ -119,6 +120,7 @@ const Caja = () => {
 
   /* ------- pedidos pendientes para el combo ------- */
   useEffect(() => {
+    // Pedidos pendientes
     const fetchPendientes = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/pedidos");
@@ -130,6 +132,18 @@ const Caja = () => {
       }
     };
     fetchPendientes();
+
+    // Solicitudes pendientes
+    const fetchSolicitudesPendientes = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/solicitudes?estado=Pendiente");
+        const data = await res.json();
+        setPendingSolicitudes(data.data || []);
+      } catch (e) {
+        console.error("No se pudo traer solicitudes pendientes", e);
+      }
+    };
+    fetchSolicitudesPendientes();
   }, []);
 
   /* ------- obtención de toda la caja (tabla inferior) ------- */
@@ -155,32 +169,75 @@ const Caja = () => {
   /* ---------- handlers ---------- */
   const obtenerDatosPedido = async () => {
     const id = formData.pedidoId;
-    if (!id) return alert("Selecciona un pedido pendiente.");
+    if (!id) return alert("Selecciona un pedido o solicitud.");
 
     try {
-      const res = await fetch(`http://localhost:3000/api/usuarios/caja/${id}`);
-      if (!res.ok) throw new Error();
-      const mov = await res.json();
+      if (id.startsWith("pedido-")) {
+        // Es un pedido de cliente
+        const pedidoId = id.replace("pedido-", "");
+        const res = await fetch(`http://localhost:3000/api/pedidos/${pedidoId}`);
+        if (!res.ok) throw new Error();
+        const { data: pedido } = await res.json();
 
-      setFormData((p) => ({
-        ...p,
-        amount: mov.monto || "",
-        reason: mov.motivo || "",
-        reference: id,
-        nombreProveedorCliente: mov.nombreProveedorCliente || "",
-        producto: mov.producto || "",
-      }));
+        setFormData((p) => ({
+          ...p,
+          amount: pedido.total || "",
+          reason: "Cobro Pedido",
+          reference: pedidoId,
+          nombreProveedorCliente: pedido.cliente || "",
+          producto: pedido.productos
+            ? pedido.productos.map(prod => prod.nombre || prod.productoId).join(", ")
+            : "",
+        }));
 
-      setDetallesPedido(mov);
-      setShowDetalles(true);
+        setDetallesPedido({
+          ...pedido,
+          monto: pedido.total,
+          motivo: "Cobro Pedido",
+          nombreProveedorCliente: pedido.cliente || "",
+          producto: pedido.productos
+            ? pedido.productos.map(prod => prod.nombre || prod.productoId).join(", ")
+            : "",
+        });
+        setShowDetalles(true);
+      } else if (id.startsWith("solicitud-")) {
+        // Es una solicitud a proveedor
+        const solicitudId = Number(id.replace("solicitud-", ""));
+        const res = await fetch(`http://localhost:3000/api/solicitudes/${solicitudId}`);
+        if (!res.ok) throw new Error();
+        const { data: solicitud } = await res.json();
+
+        setFormData((p) => ({
+          ...p,
+          amount: solicitud.total || "",
+          reason: "Pago a Proveedor",
+          reference: solicitudId,
+          nombreProveedorCliente: solicitud.proveedor?.nombre || "",
+          producto: solicitud.productos
+            ? solicitud.productos.map(prod => prod.nombreTemporal || prod.productoId).join(", ")
+            : "",
+        }));
+
+        setDetallesPedido({
+          ...solicitud,
+          monto: solicitud.total,
+          motivo: "Pago a Proveedor",
+          nombreProveedorCliente: solicitud.proveedor?.nombre || "",
+          producto: solicitud.productos
+            ? solicitud.productos.map(prod => prod.nombreTemporal || prod.productoId).join(", ")
+            : "",
+        });
+        setShowDetalles(true);
+      } else {
+        alert("ID no válido.");
+      }
     } catch (e) {
-      alert("No se pudo obtener el pedido");
+      alert("No se pudo obtener el pedido o solicitud");
     }
   };
 
   const handleRegister = async () => {
-    const { amount, reference, reason, nombreProveedorCliente, producto, pedidoId } =
-      formData;
+    const { amount, reference, reason, nombreProveedorCliente, producto, pedidoId } = formData;
     if (!amount || !reference || !reason || !nombreProveedorCliente || !producto)
       return alert("Completa todos los campos.");
 
@@ -212,19 +269,28 @@ const Caja = () => {
       const { data: nuevoMovimiento } = await res.json();
       setMovimientosCaja((m) => [...m, { ...nuevoMovimiento, usuario: usuario.nombre }]);
 
-      /* marcar pedido como Pagado */
-      await fetch(`http://localhost:3000/api/pedidos/${pedidoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: "Pagado" }),
-      });
+      // Detectar si es pedido o solicitud
+      if (pedidoId.startsWith("pedido-")) {
+        const id = pedidoId.replace("pedido-", "");
+        await fetch(`http://localhost:3000/api/pedidos/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: "Pagado" }),
+        });
+        setPendingOrders((prev) => prev.filter((p) => p.pedidoId !== Number(id)));
+        alert("✅ Pedido Pagado");
+      } else if (pedidoId.startsWith("solicitud-")) {
+        const id = pedidoId.replace("solicitud-", "");
+        await fetch(`http://localhost:3000/api/solicitudes/${id}/estado`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: "Pagado" }),
+        });
+        setPendingSolicitudes((prev) => prev.filter((s) => s.solicitudId !== Number(id)));
+        alert("✅ Solicitud Pagada");
+      }
 
-      /* feedback visual */
-      alert("✅ Pedido Pagado");
-      /* quitarlo del combo */
-      setPendingOrders((prev) => prev.filter((p) => p.pedidoId !== pedidoId));
-
-      /* limpiar */
+      // Limpiar formulario
       setFormData((p) => ({
         ...p,
         pedidoId: "",
@@ -243,59 +309,59 @@ const Caja = () => {
   };
 
   const generarPDF = () => {
-      const doc = new jsPDF();
-      // Filtra los movimientos que estén dentro del rango de fechas seleccionadas
-      const movimientosFiltrados = movimientosCaja.filter(mov => {
-        const fecha = new Date(mov.fechaHora).toISOString().split("T")[0];
-        return fecha >= fechaInicio && fecha <= fechaFin;  // Filtra por las fechas de corte
-      });
-      doc.setFontSize(18).setFont("helvetica", "bold");
-      doc.text("Soporte Financiero Mensual", 105, 20, null, null, "center");
-      doc.setFontSize(12).setFont("helvetica", "normal");
-      doc.text(`Desde: ${fechaInicio}    Hasta: ${fechaFin}`, 105, 30, null, null, "center");
-      let y = 45;
-      let totalEntradas = 0, totalSalidas = 0;
-      // Recorre los movimientos filtrados y genera el contenido del PDF
-      movimientosFiltrados.forEach((mov) => {
-        const tipo = mov.motivo === "Cobro Pedido" ? "📥 Entrada" : "📤 Salida";
-        if (mov.motivo === "Cobro Pedido") totalEntradas += mov.monto;
-        else totalSalidas += mov.monto;
-        doc.setDrawColor(180).setLineWidth(0.1).line(14, y - 4, 195, y - 4);
-        doc.setFont("helvetica", "bold").text(tipo, 105, y, null, null, "center");
-        doc.setFont("helvetica", "normal");
-        y += 6;
-        doc.text(`Usuario: ${mov.usuario}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Referencia: ${mov.referencia}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Motivo: ${mov.motivo}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Nombre: ${mov.nombreProveedorCliente}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Producto: ${mov.producto}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Total: $${mov.monto.toFixed(2)}`, 105, y, null, null, "center");
-        y += 6;
-        doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 105, y, null, null, "center");
-        y += 12;
-        if (y > 260) {
-          doc.addPage();
-          y = 20;
-        }
-      });
-      doc.line(14, y - 4, 195, y - 4);
-      const balance = totalEntradas - totalSalidas;
-      y += 10;
-      doc.setFont("helvetica", "bold").text("Resumen Financiero:", 105, y, null, null, "center");
+    const doc = new jsPDF();
+    // Filtra los movimientos que estén dentro del rango de fechas seleccionadas
+    const movimientosFiltrados = movimientosCaja.filter(mov => {
+      const fecha = new Date(mov.fechaHora).toISOString().split("T")[0];
+      return fecha >= fechaInicio && fecha <= fechaFin;  // Filtra por las fechas de corte
+    });
+    doc.setFontSize(18).setFont("helvetica", "bold");
+    doc.text("Soporte Financiero Mensual", 105, 20, null, null, "center");
+    doc.setFontSize(12).setFont("helvetica", "normal");
+    doc.text(`Desde: ${fechaInicio}    Hasta: ${fechaFin}`, 105, 30, null, null, "center");
+    let y = 45;
+    let totalEntradas = 0, totalSalidas = 0;
+    // Recorre los movimientos filtrados y genera el contenido del PDF
+    movimientosFiltrados.forEach((mov) => {
+      const tipo = mov.motivo === "Cobro Pedido" ? "📥 Entrada" : "📤 Salida";
+      if (mov.motivo === "Cobro Pedido") totalEntradas += mov.monto;
+      else totalSalidas += mov.monto;
+      doc.setDrawColor(180).setLineWidth(0.1).line(14, y - 4, 195, y - 4);
+      doc.setFont("helvetica", "bold").text(tipo, 105, y, null, null, "center");
       doc.setFont("helvetica", "normal");
-      y += 8;
-      doc.text(`Total Entradas (📥): $${totalEntradas.toFixed(2)}`, 105, y, null, null, "center");
-      y += 8;
-      doc.text(`Total Salidas (📤): $${totalSalidas.toFixed(2)}`, 105, y, null, null, "center");
-      y += 8;
-      doc.text(`Balance: $${balance.toFixed(2)}`, 105, y, null, null, "center");
-      doc.save(`Reporte_${fechaInicio}_al_${fechaFin}.pdf`);
-    };
+      y += 6;
+      doc.text(`Usuario: ${mov.usuario}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Referencia: ${mov.referencia}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Motivo: ${mov.motivo}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Nombre: ${mov.nombreProveedorCliente}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Producto: ${mov.producto}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Total: $${mov.monto.toFixed(2)}`, 105, y, null, null, "center");
+      y += 6;
+      doc.text(`Fecha: ${new Date(mov.fechaHora).toLocaleString()}`, 105, y, null, null, "center");
+      y += 12;
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+    doc.line(14, y - 4, 195, y - 4);
+    const balance = totalEntradas - totalSalidas;
+    y += 10;
+    doc.setFont("helvetica", "bold").text("Resumen Financiero:", 105, y, null, null, "center");
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    doc.text(`Total Entradas (📥): $${totalEntradas.toFixed(2)}`, 105, y, null, null, "center");
+    y += 8;
+    doc.text(`Total Salidas (📤): $${totalSalidas.toFixed(2)}`, 105, y, null, null, "center");
+    y += 8;
+    doc.text(`Balance: $${balance.toFixed(2)}`, 105, y, null, null, "center");
+    doc.save(`Reporte_${fechaInicio}_al_${fechaFin}.pdf`);
+  };
 
   /* ---------- render ---------- */
   return (
@@ -306,13 +372,13 @@ const Caja = () => {
           ☰ Corte de Caja
         </SidebarButton>
         <Sidebar isOpen={isSidebarOpen}>
-      <Cont_lbl>
-        <Label>📅 Fecha actual: <DateBox value={date} readOnly /></Label>
-        <Label>⏰ Hora actual: <TimeBox value={time} readOnly /></Label>
-        <Label>📆 Reporte del: <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} /></Label>
-        <Label>📆 al: <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} /></Label>
-        <Button onClick={generarPDF}>📄 Generar reporte</Button>
-      </Cont_lbl>
+          <Cont_lbl>
+            <Label>📅 Fecha actual: <DateBox value={date} readOnly /></Label>
+            <Label>⏰ Hora actual: <TimeBox value={time} readOnly /></Label>
+            <Label>📆 Reporte del: <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} /></Label>
+            <Label>📆 al: <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} /></Label>
+            <Button onClick={generarPDF}>📄 Generar reporte</Button>
+          </Cont_lbl>
         </Sidebar>
 
         {/* formulario */}
@@ -322,43 +388,50 @@ const Caja = () => {
             <DropBox
               name="pedidoId"
               value={formData.pedidoId}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, pedidoId: e.target.value, reference: e.target.value }))
-              }
+              onChange={(e) => setFormData((p) => ({ ...p, pedidoId: e.target.value, reference: e.target.value }))}
             >
               <option value="">Seleccionar…</option>
-              {pendingOrders.map((p) => (
-                <option key={p.pedidoId} value={p.pedidoId}>
-                  {p.pedidoId} – {p.cliente}
-                </option>
-              ))}
+              <optgroup label="Pedidos de clientes">
+                {pendingOrders.map((p) => (
+                  <option key={`pedido-${p.pedidoId}`} value={`pedido-${p.pedidoId}`}>
+                    Pedido {p.pedidoId} – {p.cliente}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Solicitudes a proveedor">
+                {pendingSolicitudes.map((s) => (
+                  <option key={`solicitud-${s.solicitudId}`} value={`solicitud-${s.solicitudId}`}>
+                    Solicitud {s.solicitudId} – {s.proveedor?.nombre}
+                  </option>
+                ))}
+              </optgroup>
             </DropBox>
             <Button onClick={obtenerDatosPedido}>🔍 Obtener datos</Button>
           </Label>
 
         </Cont_inputs>
-<StaticTable>
-  <Table>
-    <thead>
-      <tr>
-        <Th>ID Pedido</Th>
-        <Th>Producto</Th>
-        <Th>Nombre</Th>
-        <Th>Motivo</Th>
-        <Th>Total</Th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <Td>{formData.pedidoId || "—"}</Td>
-        <Td>{detallesPedido?.producto || "—"}</Td>
-        <Td>{detallesPedido?.nombreProveedorCliente || "—"}</Td>
-        <Td>{detallesPedido?.motivo || "—"}</Td>
-        <Td>{detallesPedido ? `$${detallesPedido.monto}` : "—"}</Td>
-      </tr>
-    </tbody>
-  </Table>
-</StaticTable>
+        <StaticTable>
+          <Table>
+            <thead>
+              <tr>
+                <Th>ID Pedido</Th>
+                <Th>Producto</Th>
+                <Th>Nombre</Th>
+                <Th>Motivo</Th>
+                <Th>Total</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <Td>{formData.pedidoId || "—"}</Td>
+                <Td>{detallesPedido?.producto || "—"}</Td>
+                <Td>{detallesPedido?.nombreProveedorCliente || "—"}</Td>
+                <Td>{detallesPedido?.motivo || "—"}</Td>
+                <Td>{detallesPedido ? `$${detallesPedido.monto}` : "—"}</Td>
+              </tr>
+            </tbody>
+          </Table>
+        </StaticTable>
 
         <Button variant="primary" onClick={handleRegister}>💾 Registrar Movimiento</Button>
         <Table>
@@ -387,7 +460,7 @@ const Caja = () => {
                   <Td>${mov.monto}</Td>
                   <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
                 </tr>
-            ))}
+              ))}
           </tbody>
         </Table>
       </Container>
