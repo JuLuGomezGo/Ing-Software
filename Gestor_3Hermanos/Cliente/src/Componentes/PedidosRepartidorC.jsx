@@ -121,14 +121,8 @@ function PedidosRepartidorC({ pedidos = [] }) {
                     value={currentState}
                     onChange={(e) => handleStateChange(index, e.target.value)}
                   >
-                    <option value="En proceso">En proceso</option>
                     <option value="Entregado">Entregado</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Listo para entrega">Listo para entrega</option>
-                    <option value="En camino">En camino</option>
-                    <option value="Cancelado">Cancelado</option>
-                    <option value="Entrega parcial">Entrega parcial</option>
-                    <option value="Entregado/no pagado">Entregado/no pagado</option>
+                    <option value="Pagado">Pagado</option>
                   </select>
                 </div>
 

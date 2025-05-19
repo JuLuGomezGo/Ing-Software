@@ -4,7 +4,6 @@ import "./PedidosRepartidor.css";
 import HeaderRepartidor from "../Componentes/HeaderRepartidor";
 import SearchBar from "../Componentes/Search";
 import MainContainer from "../Componentes/MainContainer";
-import IconMap from "../Componentes/Iconos/map.png";
 
 function PedidosRepartidor() {
   const [busqueda, setBusqueda] = useState("");
@@ -18,9 +17,6 @@ function PedidosRepartidor() {
           throw new Error("Error al obtener pedidos");
         }
         const data = await response.json();
-
-        console.log("Estados recibidos:", data.map(p => `"${p.estado}"`)); // depuración
-        
         setPedidos(data);
       } catch (error) {
         console.error("Error al obtener pedidos:", error);
@@ -30,32 +26,36 @@ function PedidosRepartidor() {
     fetchPedidos();
   }, []);
 
-  // 🔧 Función de normalización mejorada
   const normalizar = (texto) =>
     texto?.toLowerCase()
       .normalize("NFD")
       .replace(/\p{Diacritic}/gu, "")
-      .replace(/\s+/g, " ") // unifica espacios múltiples
-      .trim();              // quita espacios al inicio/final
+      .replace(/\s+/g, " ")
+      .trim();
 
-  const pedidosMapeados = pedidos.map((p) => ({
-    id: p.pedidoId,
-    direccion: p.direccionEntrega,
-    total: p.total,
-    nombreCliente: p.cliente,
-    estado: p.estado,
-    fecha: p.fecha,
-    productos: p.productos,
-    metodoPago: p.metodoPago,
+  const pedidosMapeados = pedidos.map((pedido) => ({
+    id: pedido.pedidoId,
+    direccion: pedido.direccionEntrega,
+    estado: pedido.estado,
+    total: pedido.total,
+    nombreCliente: pedido.cliente,
+    productos: pedido.productos,
+    fecha: pedido.fecha,
+    metodoPago: pedido.metodoPago
   }));
 
   const pedidosFiltrados = pedidosMapeados
-    // Filtrar solo por estados deseados (normalizados)
+    // ✅ SOLO pedidos a domicilio (no "local")
     .filter((pedido) => {
-      const estadoNormalizado = normalizar(pedido.estado);
-      return ["en camino", "listo para entrega", "en proceso"].includes(estadoNormalizado);
+      const direccion = (pedido.direccion || "").toLowerCase().trim();
+      return direccion !== "local" && direccion.length > 3;
     })
-    // Filtrar por búsqueda
+    // ✅ Estados válidos para repartidor
+    .filter((pedido) => {
+      const estado = normalizar(pedido.estado);
+      return ["en camino", "listo para entrega", "en proceso"].includes(estado);
+    })
+    // ✅ Búsqueda
     .filter((pedido) => {
       const filtro = normalizar(busqueda);
       return (
@@ -74,8 +74,15 @@ function PedidosRepartidor() {
             onChange={(e) => setBusqueda(e.target.value)}
           />
         </div>
+
         <div className="pedidos-container">
-          <PedidosRepartidorC pedidos={pedidosFiltrados} />
+          {pedidosFiltrados.length > 0 ? (
+            <PedidosRepartidorC pedidos={pedidosFiltrados} />
+          ) : (
+            <p style={{ padding: "1rem", fontSize: "1.1rem", color: "#555" }}>
+              No hay pedidos a domicilio para mostrar.
+            </p>
+          )}
         </div>
       </div>
     </MainContainer>
