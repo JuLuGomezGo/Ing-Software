@@ -53,7 +53,7 @@ function PedidosRepartidor() {
     // ✅ Estados válidos para repartidor
     .filter((pedido) => {
       const estado = normalizar(pedido.estado);
-      return ["en camino", "listo para entrega", "en proceso"].includes(estado);
+      return ["en camino", "listo para entrega"].includes(estado);
     })
     // ✅ Búsqueda
     .filter((pedido) => {

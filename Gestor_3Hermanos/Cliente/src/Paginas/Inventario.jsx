@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
 
 // Componentes Basicos
-import { Table, Th, Td, Tr } from '../Componentes/Table';
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from '../Componentes/Table';
 import Button from '../Componentes/Button';
 import Icon from '../Componentes/Icon';
 import { TextBox } from '../Componentes/TextComponent';
@@ -73,6 +73,7 @@ const MovementHistory = styled.div`
   min-width: 300px;
   background-color: #eee4da;
   padding: 15px;
+  margin: 0;
   border-radius: 8px;
   border: 1px solid #a96e3b;
 `;
@@ -137,7 +138,7 @@ function GestionInventario() {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
                 ...(body && { body: JSON.stringify(body) })
             };
@@ -173,74 +174,74 @@ function GestionInventario() {
 
 
 
-const handleGuardarProducto = async (producto) => { 
-  if (!producto) {
-    console.error("Producto no definido en handleGuardarProducto");
-    return;
-  }
+    const handleGuardarProducto = async (producto) => {
+        if (!producto) {
+            console.error("Producto no definido en handleGuardarProducto");
+            return;
+        }
 
-  const isNuevo = !producto.productoId;
+        const isNuevo = !producto.productoId;
 
-  const url = isNuevo
-    ? "http://localhost:3000/api/productos"
-    : `http://localhost:3000/api/productos/${producto.productoId}`;
+        const url = isNuevo
+            ? "http://localhost:3000/api/productos"
+            : `http://localhost:3000/api/productos/${producto.productoId}`;
 
-  const method = isNuevo ? "POST" : "PATCH";
+        const method = isNuevo ? "POST" : "PATCH";
 
-  // Si es restock, asegurarse de que se acumula historial
-  let body = producto;
+        // Si es restock, asegurarse de que se acumula historial
+        let body = producto;
 
-  if (!isNuevo && producto.historialInventario?.length) {
-    // Buscar el producto actual para preservar historial existente
-    const productoActual = productos.find(p => p.productoId === producto.productoId);
-    if (productoActual) {
-      body = {
-        ...producto,
-        historialInventario: [
-          ...(productoActual.historialInventario || []),
-          ...producto.historialInventario
-        ]
-      };
-    }
-  }
-  
-  try {
-      const response = await fetch(url, {
-          method,
-          headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(body)
-        });
-        console.log("Datos a enviar:", response);
+        if (!isNuevo && producto.historialInventario?.length) {
+            // Buscar el producto actual para preservar historial existente
+            const productoActual = productos.find(p => p.productoId === producto.productoId);
+            if (productoActual) {
+                body = {
+                    ...producto,
+                    historialInventario: [
+                        ...(productoActual.historialInventario || []),
+                        ...producto.historialInventario
+                    ]
+                };
+            }
+        }
 
-    const data = await response.json();
-    console.log(data); 
-    if (!response.ok) throw new Error(data.message || "Error al actualizar");
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(body)
+            });
+            console.log("Datos a enviar:", response);
 
-    // Actualizar lista de productos localmente
-    if (isNuevo) {
-      setProductos(prev => [...prev, data.data]);
-    } else {
-      setProductos(prev =>
-        prev.map(p => p.productoId === data.data.productoId ? data.data : p)
-      );
+            const data = await response.json();
+            console.log(data);
+            if (!response.ok) throw new Error(data.message || "Error al actualizar");
 
-      // Actualizar producto seleccionado si corresponde
-      if (selectedProduct?.productoId === data.data.productoId) {
-        setSelectedProduct(data.data);
-      }
-    }
+            // Actualizar lista de productos localmente
+            if (isNuevo) {
+                setProductos(prev => [...prev, data.data]);
+            } else {
+                setProductos(prev =>
+                    prev.map(p => p.productoId === data.data.productoId ? data.data : p)
+                );
 
-    toast.success(data.message || "Producto actualizado");
-    handleCloseModal();
+                // Actualizar producto seleccionado si corresponde
+                if (selectedProduct?.productoId === data.data.productoId) {
+                    setSelectedProduct(data.data);
+                }
+            }
 
-  } catch (error) {
-    toast.error(error.message);
-    console.error("Detalles del error:", error);
-  }
-};
+            toast.success(data.message || "Producto actualizado");
+            handleCloseModal();
+
+        } catch (error) {
+            toast.error(error.message);
+            console.error("Detalles del error:", error);
+        }
+    };
 
 
 
@@ -323,14 +324,15 @@ const handleGuardarProducto = async (producto) => {
                     </SearchBar>
 
                     <FilterSection>
-                        <Button size="medium" >Filtros</Button>
-                        <Button size="medium" variant="secondary" onClick={() => {
-                                    setProductoEnModal(selectedProduct);
-                                    openModal("MovStock")
-                                }}>
-                                    <Icon src={stockIcon} /> Mov. Stock
-                                </Button>
-                        <Button onClick={() =>navigate('/solicitudProducto')}>
+                        
+                        <Button size="medium" variant="secondary" 
+                        onClick={() => {
+                            setProductoEnModal(selectedProduct);
+                            openModal("MovStock")
+                        }}>
+                            <Icon src={stockIcon} /> Mov. Stock
+                        </Button>
+                        <Button onClick={() => navigate('/solicitudProducto')}>
                             <Icon src={historyIcon} /> Solicitudes
                         </Button>
                         <Button onClick={() => navigate('/gestion-proveedores')}>
@@ -355,31 +357,33 @@ const handleGuardarProducto = async (producto) => {
                     </FilterSection>
                 </HeaderSection>
 
-                <Table >
-                    <thead>
-                        <tr>
-                            <Th>🏷️ ID</Th>
-                            <Th>📦 Nombre</Th>
-                            <Th>💲 Precio</Th>
-                            <Th>📉 Stock</Th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredProducts.map((producto, index) => (
-                            <Tr
-                                key={producto.productoId}
-                                onClick={() => setSelectedProduct(producto)}
-                                className={selectedProduct?.productoId === producto.productoId ? "selected" : ""}
-                                index={index}
-                            >
-                                <Td>{producto.productoId}</Td>
-                                <Td>{producto.nombre}</Td>
-                                <Td>${producto.precio.toFixed(2)}</Td>
-                                <Td>{producto.stock} kg</Td>
+                <Tcontainer $scroll={filteredProducts.length > 6} $rows={6}>
+                    <Table >
+                        <Thead>
+                            <Tr>
+                                <Th>🏷️ ID</Th>
+                                <Th>📦 Nombre</Th>
+                                <Th>💲 Precio</Th>
+                                <Th>📉 Stock</Th>
                             </Tr>
-                        ))}
-                    </tbody>
-                </Table>
+                        </Thead>
+                        <Tbody>
+                            {filteredProducts.map((producto, index) => (
+                                <Tr
+                                    key={producto.productoId}
+                                    onClick={() => setSelectedProduct(producto)}
+                                    className={selectedProduct?.productoId === producto.productoId ? "selected" : ""}
+                                    index={index}
+                                >
+                                    <Td>{producto.productoId}</Td>
+                                    <Td>{producto.nombre}</Td>
+                                    <Td>${producto.precio.toFixed(2)}</Td>
+                                    <Td>{producto.stock} kg</Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </Tcontainer>
 
                 {selectedProduct ? (
                     <ProductDetailSection>
@@ -408,45 +412,45 @@ const handleGuardarProducto = async (producto) => {
                                 }}>
                                     <Icon src={deleteIcon} /> Eliminar
                                 </Button>
-                                <Button size="medium" variant="secondary">
-                                    <Icon src={historyIcon} /> Ver Solicitudes
-                                </Button>
                             </ActionButtons>
                         </ProductInfo>
 
                         <MovementHistory>
                             <h3>📊 Historial de Movimientos</h3>
-                            <Table>
-                                <thead>
-                                    <Tr>
-                                        <Th>📅 Fecha</Th>
-                                        <Th>💬 Motivo</Th>
-                                        <Th>📉 Cant.</Th>
-                                        <Th>👤 Usuario</Th>
-                                        <Th>🔗 Relación</Th>
-                                        <Th>📝 Notas</Th>
-                                    </Tr>
-                                </thead>
-                                <tbody>
-                                    {selectedProduct.historialInventario.map((mov, index) => (
-                                        <Tr key={index}>
-                                            <Td>{new Date(mov.fechaMovimiento).toLocaleString()}</Td>
-                                            <Td>{mov.motivo}</Td>
-                                            <Td style={{ color: mov.cantidad > 0 ? "green" : "red", fontWeight: 600 }}>
-                                                {mov.cantidad > 0 ? `+${mov.cantidad}` : mov.cantidad} kg
-                                            </Td>
-                                            <Td>{mov.usuarioId}</Td>
-                                            <Td>
-                                                {mov.pedidoId && <div>🧾 Pedido #{mov.pedidoId}</div>}
-                                                {mov.solicitudId && <div>📄 Solicitud #{mov.solicitudId}</div>}
-                                                {mov.cliente && <div>👥 {mov.cliente}</div>}
-                                            </Td>
-                                            <Td>{mov.notas || "—"}</Td>
+                            <Tcontainer style={{ paddingLeft: "15px" }}
+                                $scroll={selectedProduct.historialInventario.length > 5}
+                                $rows={5}>
+                                <Table>
+                                    <Thead>
+                                        <Tr>
+                                            <Th>📅 Fecha</Th>
+                                            <Th>💬 Motivo</Th>
+                                            <Th>📉 Cant.</Th>
+                                            <Th>👤 Usuario</Th>
+                                            <Th>🔗 Relación</Th>
+                                            <Th>📝 Notas</Th>
                                         </Tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-
+                                    </Thead>
+                                    <Tbody>
+                                        {selectedProduct.historialInventario.map((mov, index) => (
+                                            <Tr key={index}>
+                                                <Td>{new Date(mov.fechaMovimiento).toLocaleString()}</Td>
+                                                <Td>{mov.motivo}</Td>
+                                                <Td style={{ color: mov.motivo === "Venta a Cliente" ? "red" : "green", fontWeight: 600 }}>
+                                                    {mov.motivo === "Venta a Cliente" ? `-${mov.cantidad}` : `+${mov.cantidad}`} kg
+                                                </Td>
+                                                <Td>{mov.usuarioId}</Td>
+                                                <Td>
+                                                    {mov.motivo === "Venta a Cliente" && <div>Pedido# {mov.detalles.pedidoId}</div>}
+                                                    {(mov.motivo === "ReStock" || mov.motivo === "Nuevo Producto") && <div>Solicitud# {mov.detalles.solicitudId}</div>}
+                                                    {/* {mov.cliente && <div>👥 {mov.cliente}</div>} */}
+                                                </Td>
+                                                <Td>{mov.notas || "—"}</Td>
+                                            </Tr>
+                                        ))}
+                                    </Tbody>
+                                </Table>
+                            </Tcontainer>
                         </MovementHistory>
                     </ProductDetailSection>
                 ) : (

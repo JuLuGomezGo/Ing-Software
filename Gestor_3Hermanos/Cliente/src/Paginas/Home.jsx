@@ -6,7 +6,7 @@ import Header from "../Componentes/Header";
 import MainContainer from "../Componentes/MainContainer";
 import SubTittle from "../Componentes/SubTitle";
 import Button from "../Componentes/Button";
-import { Table, Td, Th, Tr } from "../Componentes/Table";
+import { Table, Td, Th, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import EstadoVisual from "../Componentes/EstadoVisual";
 import productoIcon from "../Componentes/Iconos/productoIcon.png";
 import vermasIcon from "../Componentes/Iconos/details.png";
@@ -31,29 +31,39 @@ const estadoIconos = {
 };
 
 // ---------- ESTILOS ----------
-const Ventana = styled.div`
-  padding: 20px;
-  background-color: #fff0f5;
-  border-radius: 12px;
-  margin-top: 20px;
-  box-sizing: border-box;
-`;
 
 const MainLayout = styled.div`
+  background-color: #f9f4ee;
+  minwidth: 100vw;
+  minheight: 120vh;
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  align-items: center;
+  justify-content: center;
+  grid-template-columns: 1.5fr 1fr;
   gap: 20px;
+  padding-left: 0px;
+
+
+
+`;
+
+const SideSection = styled.div`
+  border-radius: 8px;
   width: 100%;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 0;
+  
 `;
 
 const TableContainer = styled.div`
-  border: 1px solid #ccc;
   padding: 16px;
   border-radius: 8px;
   background-color: #f9f4ee;
-  width: 100%;
-  box-sizing: border-box;
+  width: 90%;
 `;
 
 const ModalOverlay = styled.div`
@@ -66,6 +76,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 999;
 `;
 
 const ModalContent = styled.div`
@@ -180,95 +191,122 @@ function Home() {
   return (
     <MainContainer>
       <Header />
-      <h2>HOME</h2>
-      <Ventana>
-        <MainLayout>
-          <div>
-            <TableContainer>
-              <SubTittle stitle="Pedidos" ancho="completo" icono={nuevoPedido} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/gestion-pedidos")} />
-              <Table>
-                <thead>
-                  <Tr>
-                    <Th># Pedido</Th>
-                    <Th>Cliente</Th>
-                    <Th>Estado</Th>
-                    <Th>Total</Th>
-                    <Th>Fecha</Th>
-                  </Tr>
-                </thead>
-                <tbody>
-                  {pedidos.map((pedido) => (
-                    <Tr key={pedido.pedidoId} onClick={() => { setSelectedPedido(pedido); setShowModal(true); }}>
-                      <Td>{pedido.pedidoId}</Td>
-                      <Td>{pedido.cliente}</Td>
-                      <EstadoVisual estado={pedido.estado} />
-                      <Td>${pedido.total?.toFixed(2)}</Td>
-                      <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
-                    </Tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableContainer>
-          </div>
+        <h2>HOME</h2>
 
-          <div>
-            <TableContainer>
-              <SubTittle stitle="Productos Disponibles" ancho="completo" icono={productoIcon} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/Inventario")} />
-              <SearchBarContainer>
-                <SearchIcon src={iconSearch} alt="Buscar" />
-                <SearchInput
-                  type="text"
-                  placeholder="Buscar producto..."
-                  value={filtroProducto}
-                  onChange={(e) => setFiltroProducto(e.target.value)}
-                />
-              </SearchBarContainer>
+      <MainLayout>
+        <TableContainer>
+          <SubTittle stitle="Pedidos" ancho="completo" icono={nuevoPedido} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/gestion-pedidos")} />
+          <Tcontainer $scroll={pedidos.length > 7} $rows={7}>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th># Pedido</Th>
+                  <Th>Cliente</Th>
+                  <Th>Estado</Th>
+                  <Th>Total</Th>
+                  <Th>Fecha</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {pedidos.map((pedido) => (
+                  <Tr key={pedido.pedidoId}
+                    onClick={() => {
+                      setSelectedPedido(pedido);
+                      setShowModal(true);
+                    }}>
+                    <Td>{pedido.pedidoId}</Td>
+                    <Td>{pedido.cliente}</Td>
+                    <EstadoVisual estado={pedido.estado} />
+                    <Td>${pedido.total?.toFixed(2)}</Td>
+                    <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Tcontainer>
+        </TableContainer>
+
+        <SideSection >
+          <TableContainer style={{ height: "350px" }}>
+            <SubTittle
+              stitle="Productos Disponibles"
+              ancho="completo"
+              icono={productoIcon}
+              setButton={true}
+              btnIcon={vermasIcon}
+              buttonText="Ver mas>"
+              onClick={() => navigate("/Inventario")}
+            />
+
+            <SearchBarContainer>
+              <SearchIcon src={iconSearch} alt="Buscar" />
+              <SearchInput
+                type="text"
+                placeholder="Buscar producto..."
+                value={filtroProducto}
+                onChange={(e) => setFiltroProducto(e.target.value)}
+              />
+            </SearchBarContainer>
+
+
+            <Tcontainer $scroll={productosFiltrados.length > 4} $rows={4}>
               <Table>
-                <thead>
+                <Thead>
                   <Tr>
                     <Th>Producto</Th>
                     <Th>Stock</Th>
                     <Th>Costo/Kg</Th>
                   </Tr>
-                </thead>
-                <tbody>
+                </Thead>
+                <Tbody $scroll={productosFiltrados.length > 4} $rows={4}>
                   {productosFiltrados.map((prod) => (
-                    <Tr key={prod._id}>
+                    <Tr key={prod._id} $scroll={productosFiltrados.length > 5}>
                       <Td>{prod.nombre}</Td>
                       <Td>{prod.stock} kg</Td>
                       <Td>${prod.precio}</Td>
                     </Tr>
                   ))}
-                </tbody>
+                </Tbody>
               </Table>
-            </TableContainer>
+            </Tcontainer>
 
-            <TableContainer>
-              <SubTittle stitle="Movimientos de Caja" ancho="completo" icono={pricelcon} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/Caja")} />
+          </TableContainer>
+
+          <TableContainer style={{ height: "300px" }}>
+            <SubTittle stitle="Movimientos de Caja"
+              ancho="completo"
+              icono={pricelcon}
+              setButton={true}
+              btnIcon={vermasIcon}
+              buttonText="Ver mas>"
+              onClick={() => navigate("/Caja")} />
+
+            <Tcontainer $scroll={movimientosCaja.length > 3} $rows={3}>
               <Table>
-                <thead>
+                <Thead>
                   <Tr>
                     <Th>#Referencia</Th>
                     <Th>Motivo</Th>
                     <Th>Monto</Th>
                     <Th>Fecha/Hora</Th>
                   </Tr>
-                </thead>
-                <tbody>
+                </Thead>
+                <Tbody>
                   {movimientosCaja.map((mov) => (
-                    <Tr key={mov.cajaId}>
+                    <Tr key={mov.cajaId} $scroll={movimientosCaja.length > 1}>
                       <Td>{mov.referencia}</Td>
                       <Td>{mov.motivo}</Td>
                       <Td>${mov.monto}</Td>
                       <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
                     </Tr>
                   ))}
-                </tbody>
+                </Tbody>
               </Table>
-            </TableContainer>
-          </div>
-        </MainLayout>
-      </Ventana>
+            </Tcontainer>
+
+          </TableContainer>
+        </SideSection>
+      </MainLayout>
 
       {showModal && selectedPedido && (
         <ModalOverlay>

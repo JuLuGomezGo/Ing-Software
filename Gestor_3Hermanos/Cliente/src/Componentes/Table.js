@@ -12,20 +12,55 @@ const pulse = keyframes`
   100% { background-position: -100% 50%; }
 `;
 
-// Componentes
+const Tcontainer = styled.div`
+  padding-left: 10%;
+
+  display: table;
+  display: block;
+  margin-top: 25px;
+  align-items: center;
+  justify-content: center;
+  
+  max-height: ${({ $rows }) => ($rows ? `${57 * ($rows)}px` : 'auto')};
+  overflow-y: ${({ $scroll }) => ($scroll ? "auto" : "visible")};
+
+  /* Scrollbar estilizada opcional */
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: none;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+`;
+
+const Tbody = styled.tbody`
+  display: table-row-group;
+`;
+
+const Thead = styled.thead`
+  position: sticky;
+  top: 0;
+  z-index: 1;
+`;
+
+
 const Table = styled.table`
   width: 90%;
-  margin: 20px auto;
   border-collapse: separate;
   border-spacing: 0;
   border: 2px solid #a96e3b;
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 10px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
   font-size: 15px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   background-color: white;
   position: relative;
+  
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
@@ -35,6 +70,7 @@ const Table = styled.table`
 `;
 
 const Th = styled.th`
+  // width: 25%;
   background: linear-gradient(180deg, #a96e3b, #8b572a);
   color: white;
   padding: 16px 12px;
@@ -43,7 +79,6 @@ const Th = styled.th`
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-size: 0.95em;
-  position: sticky;
   top: 0;
   transition: all 0.3s ease;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
@@ -66,11 +101,11 @@ const Th = styled.th`
   &:active {
     transform: translateY(0);
   }
+    
 `;
 
 const Td = styled.td`
   padding: 14px 12px;
-  border-bottom: 1px solid #e8e1d7;
   background-color: ${({ $index }) => ($index % 2 === 0 ? "#f9f4ee" : "#f1e9df")};
   transition: all 0.25s ease;
   text-align: center;
@@ -106,6 +141,7 @@ const Td = styled.td`
 `;
 
 const Tr = styled.tr`
+
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   animation: ${fadeIn} 0.5s ease forwards;
@@ -139,23 +175,27 @@ const Tr = styled.tr`
 
     ${Td}:first-child {
       border-left: 2px solid #a96e3b;
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
     }
 
     ${Td}:last-child {
       border-right: 2px solid #a96e3b;
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
     }
   }
 
   &:last-child {
-    ${Td} {
-      border-bottom: none;
+        ${Td}:first-child {
+      border-bottom-left-radius: 10px;
+    }
+
+    ${Td}:last-child {
+      border-bottom-right-radius: 10px;
     }
   }
 
 `;
 
-export { Table, Th, Td, Tr };
+export { Table, Th, Td, Tr, Thead, Tbody, Tcontainer };

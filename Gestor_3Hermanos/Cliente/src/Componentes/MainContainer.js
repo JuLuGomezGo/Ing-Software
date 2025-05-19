@@ -8,6 +8,7 @@ const MainContainer = styled.div`
     gap: 20px;
     width: 100vw;
     min-height: 100vh;
+    height: fit-content;
 
 `;
 

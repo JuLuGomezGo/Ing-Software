@@ -4,7 +4,7 @@ import styled from "styled-components";
 import Header from "../Componentes/Header";
 import MainContainer from "../Componentes/MainContainer";
 import Button from "../Componentes/Button";
-import { Table, Th, Td } from "../Componentes/Table";
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import DropBox from "../Componentes/DropBox";
 import { TextBox } from "../Componentes/TextComponent";
 import { DateBox, TimeBox } from "../Componentes/Date-TimePicker";
@@ -410,49 +410,51 @@ const Caja = () => {
 
         <StaticTable>
           <Table>
-            <thead>
-              <tr>
+            <Thead>
+              <Tr>
                 <Th>ID Pedido</Th><Th>Producto</Th><Th>Nombre</Th><Th>Motivo</Th><Th>Total</Th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
+              </Tr>
+            </Thead>
+            <Tbody>
+              <Tr>
                 <Td>{formData.pedidoId || "—"}</Td>
                 <Td>{detallesPedido?.producto || "—"}</Td>
                 <Td>{detallesPedido?.nombreProveedorCliente || "—"}</Td>
                 <Td>{detallesPedido?.motivo || "—"}</Td>
                 <Td>{detallesPedido ? `$${detallesPedido.monto}` : "—"}</Td>
-              </tr>
-            </tbody>
+              </Tr>
+            </Tbody>
           </Table>
         </StaticTable>
 
         <Button variant="primary" onClick={handleRegister}>💾 Registrar Movimiento</Button>
-
+        
+        <Tcontainer $scroll={movimientosCaja.length > 7} $rows={7} >
         <Table>
-          <thead>
-            <tr>
+          <Thead>
+            <Tr>
               <Th>ID Pedido</Th><Th>Producto</Th><Th>Motivo</Th><Th>Nombre</Th><Th>Total</Th><Th>Fecha</Th>
-            </tr>
-          </thead>
-          <tbody>
+            </Tr>
+          </Thead>
+          <Tbody>
             {movimientosCaja
               .filter(m => {
                 const f = new Date(m.fechaHora).toISOString().split("T")[0];
                 return f >= fechaInicio && f <= fechaFin;
               })
               .map((mov, i) => (
-                <tr key={i}>
+                <Tr key={i}>
                   <Td>{mov.referencia}</Td>
                   <Td>{mov.producto}</Td>
                   <Td>{mov.motivo}</Td>
                   <Td>{mov.nombreProveedorCliente}</Td>
                   <Td>${mov.monto}</Td>
                   <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
-                </tr>
+                </Tr>
               ))}
-          </tbody>
+          </Tbody>
         </Table>
+        </Tcontainer>
       </Container>
     </MainContainer>
   );

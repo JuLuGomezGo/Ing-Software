@@ -5,7 +5,7 @@ import styled from "styled-components";
 // Importar tus Styled Components base
 import { TextBox, Label } from "../Componentes/TextComponent";
 import Button from "../Componentes/Button";
-import { Table, Th, Td } from "../Componentes/Table";
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import DropBox from "../Componentes/DropBox";
 import SubTitle from "../Componentes/SubTitle";
 
@@ -315,27 +315,27 @@ function GestionUsuarios() {
               </Button>
             </FormRow>
           </form>
-        </FormContainer>
+        
 
-        <TableContainer>
+         <Tcontainer $scroll={usuarios.length > 4} $rows={4}>
           <Table>
-            <thead>
-              <tr>
+            <Thead>
+              <Tr>
                 <Th>Empleado</Th>
                 <Th>Rol</Th>
                 <Th>Correo Electrónico</Th>
-              </tr>
-            </thead>
-            <tbody>
+              </Tr>
+            </Thead>
+            <Tbody>
               {usuarios.map((u, index) => {
                 const isSelected = selectedRow === index;
                 return (
-                  <tr key={u.usuarioId} onClick={() => handleRowClick(index)}>
+                  <Tr key={u.usuarioId} onClick={() => handleRowClick(index)}>
                     <Td>{u.nombre}</Td>
                     <Td>{u.rol}</Td>
                     <Td>{u.correo}</Td>
                     {isSelected && (
-                      <td>
+                      <Td>
                         <IconButtonContainer>
                           <Button
                             variant="secondary"
@@ -358,21 +358,22 @@ function GestionUsuarios() {
                             <img src={trashIcon} alt="Eliminar" style={{ width: 16 }} />
                           </Button>
                         </IconButtonContainer>
-                      </td>
+                      </Td>
                     )}
-                  </tr>
+                  </Tr>
                 );
               })}
               {usuarios.length === 0 && (
-                <tr>
+                <Tr>
                   <Td colSpan="3" style={{ textAlign: "center" }}>
                     No hay usuarios registrados
                   </Td>
-                </tr>
+                </Tr>
               )}
-            </tbody>
+            </Tbody>
           </Table>
-        </TableContainer>
+        </Tcontainer>
+        </FormContainer>
       </ContentContainer>
     </MainContainer>
   );
