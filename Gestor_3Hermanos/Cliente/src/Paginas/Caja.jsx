@@ -82,12 +82,12 @@ const StaticTable = styled.div`
 /* ================================================================================= */
 
 const Caja = () => {
-  /* ------- estados ------- */
+  // Separar estados para pedidos y solicitudes
+  const [pedidosPendientes, setPedidosPendientes] = useState([]);
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
   const [movimientosCaja, setMovimientosCaja] = useState([]);
-  const [pendingOrders, setPendingOrders] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState(null);
   const [showDetalles, setShowDetalles] = useState(false);
-  const [pendingSolicitudes, setPendingSolicitudes] = useState([]);
 
   const [formData, setFormData] = useState({
     pedidoId: "",
@@ -121,28 +121,27 @@ const Caja = () => {
   /* ------- pedidos pendientes para el combo ------- */
   useEffect(() => {
     // Pedidos pendientes
-    const fetchPendientes = async () => {
+    const fetchPedidosPendientes = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/pedidos");
-        const data = await res.json();
-        const pendientes = data.filter((p) => p.estado === "Pendiente");
-        setPendingOrders(pendientes);
+        const result = await res.json();
+        setPedidosPendientes(result.filter(p => p.estado === "Pendiente"));
       } catch (e) {
-        console.error("No se pudo traer pedidos pendientes", e);
+        console.error("Error al obtener pedidos pendientes:", e);
       }
     };
-    fetchPendientes();
 
-    // Solicitudes pendientes
     const fetchSolicitudesPendientes = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/solicitudes?estado=Pendiente");
-        const data = await res.json();
-        setPendingSolicitudes(data.data || []);
+        const { data } = await res.json();
+        setSolicitudesPendientes(data || []);
       } catch (e) {
-        console.error("No se pudo traer solicitudes pendientes", e);
+        console.error("Error al obtener solicitudes pendientes:", e);
       }
     };
+
+    fetchPedidosPendientes();
     fetchSolicitudesPendientes();
   }, []);
 
@@ -176,8 +175,8 @@ const Caja = () => {
         // Es un pedido de cliente
         const pedidoId = id.replace("pedido-", "");
         const res = await fetch(`http://localhost:3000/api/pedidos/${pedidoId}`);
-        if (!res.ok) throw new Error();
-        const { data: pedido } = await res.json();
+        if (!res.ok) throw new Error("Error al obtener pedido");
+        const pedido = await res.json(); // Pedidos devuelve directamente el objeto
 
         setFormData((p) => ({
           ...p,
@@ -186,7 +185,7 @@ const Caja = () => {
           reference: pedidoId,
           nombreProveedorCliente: pedido.cliente || "",
           producto: pedido.productos
-            ? pedido.productos.map(prod => prod.nombre || prod.productoId).join(", ")
+            ? pedido.productos.map(prod => `${prod.nombre} (${prod.cantidad})`).join(", ")
             : "",
         }));
 
@@ -196,7 +195,7 @@ const Caja = () => {
           motivo: "Cobro Pedido",
           nombreProveedorCliente: pedido.cliente || "",
           producto: pedido.productos
-            ? pedido.productos.map(prod => prod.nombre || prod.productoId).join(", ")
+            ? pedido.productos.map(prod => `${prod.nombre} (${prod.cantidad})`).join(", ")
             : "",
         });
         setShowDetalles(true);
@@ -277,7 +276,7 @@ const Caja = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: "Pagado" }),
         });
-        setPendingOrders((prev) => prev.filter((p) => p.pedidoId !== Number(id)));
+        setPedidosPendientes((prev) => prev.filter((p) => p.pedidoId !== Number(id)));
         alert("✅ Pedido Pagado");
       } else if (pedidoId.startsWith("solicitud-")) {
         const id = pedidoId.replace("solicitud-", "");
@@ -286,7 +285,7 @@ const Caja = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: "Pagado" }),
         });
-        setPendingSolicitudes((prev) => prev.filter((s) => s.solicitudId !== Number(id)));
+        setSolicitudesPendientes((prev) => prev.filter((s) => s.solicitudId !== Number(id)));
         alert("✅ Solicitud Pagada");
       }
 
@@ -364,7 +363,7 @@ const Caja = () => {
   };
 
   /* ---------- render ---------- */
-  return (
+   return (
     <MainContainer>
       <Header />
       <Container>
@@ -375,31 +374,30 @@ const Caja = () => {
           <Cont_lbl>
             <Label>📅 Fecha actual: <DateBox value={date} readOnly /></Label>
             <Label>⏰ Hora actual: <TimeBox value={time} readOnly /></Label>
-            <Label>📆 Reporte del: <DateBox value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} /></Label>
-            <Label>📆 al: <DateBox value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} /></Label>
+            <Label>📆 Reporte del: <DateBox value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} /></Label>
+            <Label>📆 al: <DateBox value={fechaFin} onChange={e => setFechaFin(e.target.value)} /></Label>
             <Button onClick={generarPDF}>📄 Generar reporte</Button>
           </Cont_lbl>
         </Sidebar>
 
-        {/* formulario */}
         <Cont_inputs>
           <Label>
-            Pedido pendiente:
+            Pedido/Solicitud pendiente:
             <DropBox
               name="pedidoId"
               value={formData.pedidoId}
-              onChange={(e) => setFormData((p) => ({ ...p, pedidoId: e.target.value, reference: e.target.value }))}
+              onChange={e => setFormData(p => ({ ...p, pedidoId: e.target.value }))}
             >
               <option value="">Seleccionar…</option>
               <optgroup label="Pedidos de clientes">
-                {pendingOrders.map((p) => (
+                {pedidosPendientes.map(p => (
                   <option key={`pedido-${p.pedidoId}`} value={`pedido-${p.pedidoId}`}>
                     Pedido {p.pedidoId} – {p.cliente}
                   </option>
                 ))}
               </optgroup>
               <optgroup label="Solicitudes a proveedor">
-                {pendingSolicitudes.map((s) => (
+                {solicitudesPendientes.map(s => (
                   <option key={`solicitud-${s.solicitudId}`} value={`solicitud-${s.solicitudId}`}>
                     Solicitud {s.solicitudId} – {s.proveedor?.nombre}
                   </option>
@@ -408,17 +406,13 @@ const Caja = () => {
             </DropBox>
             <Button onClick={obtenerDatosPedido}>🔍 Obtener datos</Button>
           </Label>
-
         </Cont_inputs>
+
         <StaticTable>
           <Table>
             <thead>
               <tr>
-                <Th>ID Pedido</Th>
-                <Th>Producto</Th>
-                <Th>Nombre</Th>
-                <Th>Motivo</Th>
-                <Th>Total</Th>
+                <Th>ID Pedido</Th><Th>Producto</Th><Th>Nombre</Th><Th>Motivo</Th><Th>Total</Th>
               </tr>
             </thead>
             <tbody>
@@ -434,25 +428,21 @@ const Caja = () => {
         </StaticTable>
 
         <Button variant="primary" onClick={handleRegister}>💾 Registrar Movimiento</Button>
+
         <Table>
           <thead>
             <tr>
-              <Th>ID Pedido</Th>
-              <Th>Producto</Th>
-              <Th>Motivo</Th>
-              <Th>Nombre</Th>
-              <Th>Total</Th>
-              <Th>Fecha</Th>
+              <Th>ID Pedido</Th><Th>Producto</Th><Th>Motivo</Th><Th>Nombre</Th><Th>Total</Th><Th>Fecha</Th>
             </tr>
           </thead>
           <tbody>
             {movimientosCaja
-              .filter(mov => {
-                const fechaMov = new Date(mov.fechaHora).toISOString().split("T")[0];
-                return fechaMov >= fechaInicio && fechaMov <= fechaFin;
+              .filter(m => {
+                const f = new Date(m.fechaHora).toISOString().split("T")[0];
+                return f >= fechaInicio && f <= fechaFin;
               })
-              .map((mov, index) => (
-                <tr key={index}>
+              .map((mov, i) => (
+                <tr key={i}>
                   <Td>{mov.referencia}</Td>
                   <Td>{mov.producto}</Td>
                   <Td>{mov.motivo}</Td>
@@ -467,4 +457,5 @@ const Caja = () => {
     </MainContainer>
   );
 };
+
 export default Caja;
