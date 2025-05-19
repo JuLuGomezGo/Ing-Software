@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { toast } from "react-toastify";
 import Button from "../Componentes/Button";
 import SubTitulo from "../Componentes/SubTitle";
-import { Table, Th, Td, Tr } from "../Componentes/Table";
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import { TextBox } from "../Componentes/TextComponent";
 import DropBox from "../Componentes/DropBox";
 import Icon from "../Componentes/Icon";
@@ -14,7 +14,9 @@ import Header from "../Componentes/Header";
 import MainContainer from "../Componentes/MainContainer";
 
 const Container = styled.div`
-  min-width: 100wv;
+  width: 70%;
+  min-height: 100vh;
+  height: 125vh;
   margin: 30px auto;
   padding: 20px;
   background-color: #f9f4ee;
@@ -23,6 +25,7 @@ const Container = styled.div`
 `;
 
 const Form = styled.form`
+ width: 60%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
@@ -203,18 +206,18 @@ const GestionProveedores = () => {
         <Button onClick={toggleMostrarInactivos} type="button">
           {mostrarInactivos ? "Ocultar Inactivos" : "Mostrar Inactivos"}
         </Button>
+        <Tcontainer $scroll={proveedores.length > 6} $rows={6}>
         <Table>
-          <thead>
+          <Thead>
             <Tr>
-              <Th>ID</Th>
               <Th>Nombre</Th>
               <Th>Contacto</Th>
               <Th>Email</Th>
               <Th>Dirección</Th>
               <Th>Estado</Th>
             </Tr>
-          </thead>
-          <tbody>
+          </Thead>
+          <Tbody>
             {proveedores.filter(prov => mostrarInactivos || prov.activo)
               .map((prov) => (
                 <Tr
@@ -223,7 +226,6 @@ const GestionProveedores = () => {
                   className={selectedProveedor?.proveedorId === prov.proveedorId ? "selected" : ""}
 
                 >
-                  <Td>{prov.proveedorId}</Td>
                   <Td>{prov.nombre}</Td>
                   <Td>{prov.contacto}</Td>
                   <Td>{prov.email}</Td>
@@ -231,8 +233,9 @@ const GestionProveedores = () => {
                   <Td>{prov.activo ? "Activo" : "Inactivo"}</Td>
                 </Tr>
               ))}
-          </tbody>
+          </Tbody>
         </Table>
+        </Tcontainer>
       </Container >
     </MainContainer>
   );

@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Header from '../Componentes/Header';
 import MainContainer from '../Componentes/MainContainer';
 import Icon from "../Componentes/Icon";
-import { Table, Th, Td } from "../Componentes/Table";
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import Button from "../Componentes/Button";
 import SubTitle from "../Componentes/SubTitle";
 import { DateBox, TimeBox } from '../Componentes/Date-TimePicker';
@@ -364,28 +364,30 @@ function GestionPedidos() {
                     {isLoading ? (
                         <p>Cargando...</p>
                     ) : (
-                        <Table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr>
-                                    <Th># Pedido</Th>
-                                    <Th>Cliente</Th>
-                                    <Th>Estado</Th>
-                                    <Th>Total</Th>
-                                    <Th>Fecha</Th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pedidos.map(pedido => (
-                                    <tr key={pedido.pedidoId}>
-                                        <Td>{pedido.pedidoId}</Td>
-                                        <Td>{pedido.cliente}</Td>
-                                        <Td>{pedido.estado}</Td>
-                                        <Td>${pedido.total?.toFixed(2)}</Td>
-                                        <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                        <Tcontainer $scroll={pedidos.length > 10} $rows={10}>
+                            <Table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <Thead>
+                                    <Tr>
+                                        <Th># Pedido</Th>
+                                        <Th>Cliente</Th>
+                                        <Th>Estado</Th>
+                                        <Th>Total</Th>
+                                        <Th>Fecha</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {pedidos.map(pedido => (
+                                        <Tr key={pedido.pedidoId}>
+                                            <Td>{pedido.pedidoId}</Td>
+                                            <Td>{pedido.cliente}</Td>
+                                            <Td>{pedido.estado}</Td>
+                                            <Td>${pedido.total?.toFixed(2)}</Td>
+                                            <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
+                                        </Tr>
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        </Tcontainer>
                     )}
                 </div>
             </Container>

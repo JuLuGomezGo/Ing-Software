@@ -21,7 +21,7 @@ const TextBox = styled.input`
   border-radius: 12px;
   font-size: 16px;
   background-color: #f2e6d7;
-  color: #3d2a14;
+  color:rgb(23, 15, 6);
   transition: all 0.3s ease;
   font-family: 'Segoe UI', system-ui, sans-serif;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -38,9 +38,9 @@ const TextBox = styled.input`
     box-shadow: 0 0 0 3px rgba(169, 110, 59, 0.15);
   }
     &:disabled {
-      background-color:#f2e6d7;
-      border-color:#a96e3b;
-      color:rgb(169, 163, 158);
+      background-color: #f2e6d7;
+      border-color:rgb(169, 59, 59);
+      color:rgb(147, 75, 4);
       cursor: not-allowed;
     }
 `;

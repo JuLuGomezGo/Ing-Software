@@ -8,7 +8,7 @@ import ModalSolicitud from "../Componentes/ModalSolicitud";
 
 import Button from "../Componentes/Button";
 import SubTitulo from "../Componentes/SubTitle";
-import { Table, Th, Td, Tr } from "../Componentes/Table";
+import { Table, Th, Td, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import { TextBox, Label } from "../Componentes/TextComponent";
 import DropBox from "../Componentes/DropBox";
 import Icon from "../Componentes/Icon";
@@ -16,6 +16,10 @@ import Icon from "../Componentes/Icon";
 import addIcon from "../Componentes/Iconos/add.png";
 
 const Container = styled.div`
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
   max-width: 100vw;
   margin: 30px 100px;
   padding: 20px;
@@ -295,7 +299,7 @@ const GestionSolicitudes = () => {
         </Form>
 
         <Table>
-          <thead>
+          <Thead>
             <Tr>
               <Th># Solicitud</Th>
               <Th>Proveedor</Th>
@@ -303,8 +307,8 @@ const GestionSolicitudes = () => {
               <Th>Estado</Th>
               <Th>Total</Th>
             </Tr>
-          </thead>
-          <tbody>
+          </Thead>
+          <Tbody>
             {solicitudes.map(s => (
               <Tr key={s.solicitudId} onClick={() => handleAbrirSolicitud(s)}>
                 <Td>{s.solicitudId}</Td>
@@ -314,7 +318,7 @@ const GestionSolicitudes = () => {
                 <Td>${s.total}</Td>
               </Tr>
             ))}
-          </tbody>
+          </Tbody>
         </Table>
       </Container>
       {showModal && (
