@@ -8,11 +8,13 @@ import SubTittle from "../Componentes/SubTitle";
 import Button from "../Componentes/Button";
 import { Table, Td, Th, Tr, Tbody, Thead, Tcontainer } from "../Componentes/Table";
 import EstadoVisual from "../Componentes/EstadoVisual";
+
 import productoIcon from "../Componentes/Iconos/productoIcon.png";
 import vermasIcon from "../Componentes/Iconos/details.png";
 import pricelcon from "../Componentes/Iconos/priceIcon.png";
 import nuevoPedido from "../Componentes/Iconos/nuevoPedido.png";
 import iconSearch from "../Componentes/Iconos/buscar.png";
+import detallesIcon from "../Componentes/Iconos/details.png";
 
 import iconPendiente from "../Componentes/Iconos/pendienteColor.png";
 import iconEnProceso from "../Componentes/Iconos/preparandoColor.png";
@@ -29,20 +31,54 @@ const estadoIconos = {
   Entregado: iconEntregado,
   Pagado: iconPagado,
 };
+const flujoEstados = {
+  general: {
+    Pendiente: ["En proceso"],
+    "En proceso": ["Listo para entrega"],
+    "Listo para entrega": ["Entregado"],
+    Entregado: [],
+  },
+  repartidor: {
+    "Listo para entrega": ["En camino"],
+    "En camino": ["Entregado", "Listo para entrega"],
+    Entregado: [],
+  }
+};
+
+function getEstadosValidos(rol, estadoActual, esLocal) {
+ //Si el pedido es de un local, el repartidor no puede cambiar el estado
+  if (rol === "Repartidor" && esLocal) {
+    return [];
+  }
+  const flujo = rol === "Repartidor" ? flujoEstados.repartidor : flujoEstados.general;
+  return flujo[estadoActual] || [];
+}
+
+
 
 // ---------- ESTILOS ----------
 
 const MainLayout = styled.div`
-  background-color: #f9f4ee;
-  minwidth: 100vw;
-  minheight: 120vh;
-  display: grid;
-  align-items: center;
+  // align-items: center;
   justify-content: center;
+  // padding-left: 0px;
+
+
+
+  background-color: #f9f4ee;
+  min-width: 100vw;
+  min-height: 100vh;
+  display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 20px;
-  padding-left: 0px;
+  padding: 0 10px;
 
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+    height: auto;
+  }
+  
 
 
 `;
@@ -53,7 +89,7 @@ const SideSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  // justify-content: center;
   gap: 20px;
   padding: 20px 0;
   
@@ -64,6 +100,11 @@ const TableContainer = styled.div`
   border-radius: 8px;
   background-color: #f9f4ee;
   width: 90%;
+  height: 90%;
+
+    @media (max-width: 768px) {
+    padding: 10px;
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -82,7 +123,7 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   background: #fff;
   padding: 20px;
-  width: 400px;
+  // width: 400px;
   border-radius: 10px;
 `;
 
@@ -95,6 +136,12 @@ const EstadoBox = styled.div`
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 8px;
+  transition: 0.2s;
+  &:hover {
+    transform: scale(1.02);
+    background-color: #f2f2f2;
+
+  }
 `;
 
 const Botonera = styled.div`
@@ -113,6 +160,10 @@ const SearchBarContainer = styled.div`
   border-radius: 10px;
   padding: 4px 10px;
   margin-bottom: 10px;
+
+    @media (max-width: 768px) {
+    padding: 10px;
+  }
 `;
 
 const SearchIcon = styled.img`
@@ -126,10 +177,19 @@ const SearchInput = styled.input`
   outline: none;
   font-size: 1rem;
   flex: 1;
+
+    @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 // -----------------------------
 
 function Home() {
+
+  const usuarioLogueado = localStorage.getItem("usuario");
+  const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
+  const rolUsuario = usuario?.rol;
+
   const navigate = useNavigate();
   const [productosDisponibles, setProductosDisponibles] = useState([]);
   const [filtroProducto, setFiltroProducto] = useState("");
@@ -138,6 +198,8 @@ function Home() {
   const [showModal, setShowModal] = useState(false);
   const [showEstadoModal, setShowEstadoModal] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
+
+
 
   useEffect(() => {
     fetch("http://localhost:3000/api/productos")
@@ -191,11 +253,14 @@ function Home() {
   return (
     <MainContainer>
       <Header />
-        <h2>HOME</h2>
 
       <MainLayout>
         <TableContainer>
-          <SubTittle stitle="Pedidos" ancho="completo" icono={nuevoPedido} setButton={true} btnIcon={vermasIcon} buttonText="Ver mas>" onClick={() => navigate("/gestion-pedidos")} />
+          <SubTittle stitle="Pedidos" ancho="completo" icono={nuevoPedido}
+            setButton={rolUsuario !== "Repartidor" ? true : false} btnIcon={vermasIcon} buttonText="Ver mas>"
+            onClick={() => navigate("/gestion-pedidos")}
+          />
+
           <Tcontainer $scroll={pedidos.length > 7} $rows={7}>
             <Table>
               <Thead>
@@ -225,93 +290,97 @@ function Home() {
             </Table>
           </Tcontainer>
         </TableContainer>
+        {rolUsuario !== "Repartidor" && (
+          <>
+            <SideSection >
+              <TableContainer >
+                <SubTittle
+                  stitle="Productos Disponibles"
+                  ancho="completo"
+                  icono={productoIcon}
+                  setButton={true}
+                  btnIcon={vermasIcon}
+                  buttonText="Ver mas>"
+                  onClick={() => navigate("/Inventario")}
+                />
 
-        <SideSection >
-          <TableContainer style={{ height: "350px" }}>
-            <SubTittle
-              stitle="Productos Disponibles"
-              ancho="completo"
-              icono={productoIcon}
-              setButton={true}
-              btnIcon={vermasIcon}
-              buttonText="Ver mas>"
-              onClick={() => navigate("/Inventario")}
-            />
-
-            <SearchBarContainer>
-              <SearchIcon src={iconSearch} alt="Buscar" />
-              <SearchInput
-                type="text"
-                placeholder="Buscar producto..."
-                value={filtroProducto}
-                onChange={(e) => setFiltroProducto(e.target.value)}
-              />
-            </SearchBarContainer>
+                <SearchBarContainer>
+                  <SearchIcon src={iconSearch} alt="Buscar" />
+                  <SearchInput
+                    type="text"
+                    placeholder="Buscar producto..."
+                    value={filtroProducto}
+                    onChange={(e) => setFiltroProducto(e.target.value)}
+                  />
+                </SearchBarContainer>
 
 
-            <Tcontainer $scroll={productosFiltrados.length > 4} $rows={4}>
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Producto</Th>
-                    <Th>Stock</Th>
-                    <Th>Costo/Kg</Th>
-                  </Tr>
-                </Thead>
-                <Tbody $scroll={productosFiltrados.length > 4} $rows={4}>
-                  {productosFiltrados.map((prod) => (
-                    <Tr key={prod._id} $scroll={productosFiltrados.length > 5}>
-                      <Td>{prod.nombre}</Td>
-                      <Td>{prod.stock} kg</Td>
-                      <Td>${prod.precio}</Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Tcontainer>
+                <Tcontainer $scroll={productosFiltrados.length > 4} $rows={4}>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>Producto</Th>
+                        <Th>Stock</Th>
+                        <Th>Costo/Kg</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody $scroll={productosFiltrados.length > 4} $rows={4}>
+                      {productosFiltrados.map((prod) => (
+                        <Tr key={prod._id} $scroll={productosFiltrados.length > 5}>
+                          <Td>{prod.nombre}</Td>
+                          <Td>{prod.stock} kg</Td>
+                          <Td>${prod.precio}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Tcontainer>
 
-          </TableContainer>
+              </TableContainer>
 
-          <TableContainer style={{ height: "300px" }}>
-            <SubTittle stitle="Movimientos de Caja"
-              ancho="completo"
-              icono={pricelcon}
-              setButton={true}
-              btnIcon={vermasIcon}
-              buttonText="Ver mas>"
-              onClick={() => navigate("/Caja")} />
+              <TableContainer>
+                <SubTittle stitle="Movimientos de Caja"
+                  ancho="completo"
+                  icono={pricelcon}
+                  setButton={true}
+                  btnIcon={vermasIcon}
+                  buttonText="Ver mas>"
+                  onClick={() => navigate("/Caja")} />
 
-            <Tcontainer $scroll={movimientosCaja.length > 3} $rows={3}>
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>#Referencia</Th>
-                    <Th>Motivo</Th>
-                    <Th>Monto</Th>
-                    <Th>Fecha/Hora</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {movimientosCaja.map((mov) => (
-                    <Tr key={mov.cajaId} $scroll={movimientosCaja.length > 1}>
-                      <Td>{mov.referencia}</Td>
-                      <Td>{mov.motivo}</Td>
-                      <Td>${mov.monto}</Td>
-                      <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Tcontainer>
+                <Tcontainer $scroll={movimientosCaja.length > 3} $rows={3}>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>#Referencia</Th>
+                        <Th>Motivo</Th>
+                        <Th>Monto</Th>
+                        <Th>Fecha/Hora</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {movimientosCaja.map((mov) => (
+                        <Tr key={mov.cajaId} $scroll={movimientosCaja.length > 1}>
+                          <Td>{mov.referencia}</Td>
+                          <Td>{mov.motivo}</Td>
+                          <Td>${mov.monto}</Td>
+                          <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Tcontainer>
 
-          </TableContainer>
-        </SideSection>
+              </TableContainer>
+            </SideSection>
+          </>
+        )}
       </MainLayout>
 
       {showModal && selectedPedido && (
+        
         <ModalOverlay>
           <ModalContent>
-            <h3>Detalles del Pedido</h3>
+            <SubTittle stitle="Detalles del Pedido" ancho="completo" icono={detallesIcon} >Detalles del Pedido</SubTittle>
             <p><strong>Pedido ID:</strong> {selectedPedido.pedidoId}</p>
             <p><strong>Estado:</strong> {selectedPedido.estado}</p>
             <p><strong>Fecha:</strong> {new Date(selectedPedido.fecha).toLocaleString()}</p>
@@ -339,13 +408,19 @@ function Home() {
         </ModalOverlay>
       )}
 
+
       {showEstadoModal && (
         <ModalOverlay>
           <ModalContent>
-            <h3>Selecciona nuevo estado</h3>
-            {Object.entries(estadoIconos).map(([estado, icon]) => (
+            <SubTittle stitle="Cambiar Estado del Pedido" />
+
+            <EstadoBox disabled style={{ opacity: "0.5", backgroundColor: "rgb(231, 202, 135)" }}>
+              <img src={estadoIconos[selectedPedido.estado]} alt={selectedPedido.estado} width="20" height="20" />
+              {selectedPedido.estado}
+            </EstadoBox>
+            {getEstadosValidos(rolUsuario, selectedPedido.estado, selectedPedido.cliente).map((estado) => (
               <EstadoBox key={estado} onClick={() => updateEstado(estado)}>
-                <img src={icon} alt={estado} width="20" height="20" />
+                <img src={estadoIconos[estado]} alt={estado} width="20" height="20" />
                 {estado}
               </EstadoBox>
             ))}
@@ -353,7 +428,7 @@ function Home() {
               setShowEstadoModal(false);
               setShowModal(true);
             }}>
-              Detalles del Pedido
+              Cancelar
             </Button>
           </ModalContent>
         </ModalOverlay>

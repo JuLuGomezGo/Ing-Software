@@ -2,12 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 
+//ICONOS
 import Icon from "./Icon";
 import logoIcon from '../Componentes/Iconos/LogoTexto.png';
 import homeicon from '../Componentes/Iconos/home.png';
 import logOutIcon from '../Componentes/Iconos/logOut.png';
 import gerenteIcon from '../Componentes/Iconos/gerente.png';
 import empIcon from '../Componentes/Iconos/empleado.png';
+import repartidorIcon from '../Componentes/Iconos/repartoColor.png';
+
+
+//COMPONENTES DE LA VENTANA
 
 const HeaderContainer = styled.header`
   width: 100%;
@@ -153,7 +158,9 @@ const LogOutBtn = styled.button`
   }
 `;
 
-
+const usuarioLogueado = localStorage.getItem("usuario");
+const usuario = usuarioLogueado ? JSON.parse(usuarioLogueado) : null;
+const rolUsuario = usuario?.rol;
 
 const UserDropdown = ({ usuario, onLogout, isOpen, onClose, onMouseEnter, onMouseLeave }) => {
   const ref = useRef();
@@ -198,8 +205,6 @@ const UserDropdown = ({ usuario, onLogout, isOpen, onClose, onMouseEnter, onMous
   );
 };
 
-
-
 const InventoryDropdown = ({ isOpen, onClose }) => {
   const ref = useRef();
 
@@ -241,6 +246,7 @@ const InventoryDropdown = ({ isOpen, onClose }) => {
   );
 };
 
+
 const Header = () => {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem("usuario"));
@@ -279,36 +285,43 @@ const Header = () => {
       </Link>
       <Nav>
         <ul>
-          <NavItem>
-            <NavLink to="/">
-              <Icon src={homeicon} alt="Home" />
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <NavLink to="/gestion-pedidos">Pedidos</NavLink>
-          </NavItem>
-          <NavItem>
-            <NavLink to="/caja">Caja</NavLink>
-          </NavItem>
-          <NavItem
-            onMouseEnter={() => setInventoryMenuOpen(true)}
-            onMouseLeave={() => setInventoryMenuOpen(false)}
-            onClick={toggleInventoryMenu}
-          >
-            <NavLink to="/inventario" aria-haspopup="true" aria-expanded={inventoryMenuOpen}>
-              Inventario
-            </NavLink>
-            <InventoryDropdown
-              isOpen={inventoryMenuOpen}
-              onClose={closeAllMenus}
-            />
-          </NavItem>
+          {rolUsuario !== "Repartidor" && (
+            <>
 
-          {rolUsuario !== "Empleado" && (
+              <NavItem>
+                <NavLink to="/">
+                  <Icon src={homeicon} alt="Home" />
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/gestion-pedidos">Pedidos</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/caja">Caja</NavLink>
+              </NavItem>
+              <NavItem
+                onMouseEnter={() => setInventoryMenuOpen(true)}
+                onMouseLeave={() => setInventoryMenuOpen(false)}
+                onClick={toggleInventoryMenu}
+              >
+                <NavLink to="/inventario" aria-haspopup="true" aria-expanded={inventoryMenuOpen}>
+                  Inventario
+                </NavLink>
+                <InventoryDropdown
+                  isOpen={inventoryMenuOpen}
+                  onClose={closeAllMenus}
+                />
+              </NavItem>
+            </>
+          )}
+
+          {rolUsuario === "Gerente" && (
             <NavItem>
               <NavLink to="/gestion-usuarios">Usuarios</NavLink>
             </NavItem>
           )}
+
+
 
           <NavItem>
             <UserCont
@@ -328,7 +341,9 @@ const Header = () => {
               {usuario?.rol} <br />
               {usuario?.nombre} {rolUsuario === "Gerente" ? (
                 <Icon tamaño="2.5rem" src={gerenteIcon} />
-              ) : (
+              ) : ( rolUsuario === "Repartidor" ? (
+                <Icon tamaño="2.5rem" src={repartidorIcon} />
+              ) :
                 <Icon tamaño="2.5rem" src={empIcon} />
               )}
             </UserCont>

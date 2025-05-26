@@ -94,8 +94,8 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
 
 
     const tiposMovimiento = [
-        { value: "Entrada", label: "Entrada de Stock" },
-        { value: "Salida", label: "Salida de Stock" }
+        { value: "Entrada", label: "Entrada de Producto" },
+        { value: "Salida", label: "Salida de Producto" }
     ];
 
     const motivosMovimiento = {
@@ -169,13 +169,8 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
         } if (mode === "MovStock" && productoSeleccionado) {
             setFormData({
                 solicitudId: "",
-                productoId: productoSeleccionado.productoId || "",
-                cantidad: "",
                 tipoMovimiento: "Entrada",
                 motivoMovimiento: "ReStock",
-                detalles: {
-                    nota: ""
-                },
             });
         }
     }, [productoSeleccionado, showModal, mode]);
@@ -412,6 +407,43 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     };
 
 
+    const registrarSalidaPorMerma = async () => {
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        const usuarioId = usuario?.usuarioId;
+
+        if (!formData.productoId || !formData.cantidad || formData.cantidad <= 0) {
+            return toast.error("Seleccione un producto y cantidad válida");
+        }
+
+        const producto = productosDisponibles.find(p => p.productoId === formData.productoId);
+        if (!producto) return toast.error("Producto no encontrado");
+
+        if (formData.cantidad > producto.stock) {
+            return toast.error("Cantidad supera el stock disponible");
+        }
+
+        const movimiento = {
+            cantidad: formData.cantidad,
+            tipoMovimiento: "Salida",
+            motivo: formData.motivoMovimiento || "Merma",
+            usuarioId,
+            fechaMovimiento: new Date().toISOString(),
+            detalles: {
+                nota: formData.nota || ""
+            }
+        };
+
+        const productoActualizado = {
+            productoId: producto.productoId,
+            stock: producto.stock - formData.cantidad,
+            historialInventario: [...producto.historialInventario, movimiento]
+        };
+
+        await onSave(productoActualizado); // PATCH al producto
+        toast.success("Salida registrada correctamente");
+        handleCloseModal(); // cerrar modal
+    };
+
 
 
 
@@ -456,7 +488,6 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
 
 
                                 {formData.tipoMovimiento === "Salida" && (
-
                                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                         <Label>
                                             <Icon src={details} /> Motivo
@@ -487,39 +518,49 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                                         </Label>
                                         <Label>
                                             <Icon src={details} /> Cantidad:
-                                            <TextBox defaultValue={0} type="number" value={formData.cantidad} >
+                                            <TextBox defaultValue={0} type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: Number(e.target.value) })} >
 
                                             </TextBox>
                                         </Label>
                                         <Label>Nota:
-                                            <TextArea value={formData.nota} />
+                                            <TextArea value={formData.nota}  onChange={(e) => setFormData({ ...formData, nota: e.target.value })}/>
                                         </Label>
+                                        <div>
+                                        <Button onClick={console.log(formData)}>
+                                            Registrar Salida
+                                        </Button>
+                                        </div>
+
                                     </div>
                                 )}
 
                                 {formData.tipoMovimiento === "Entrada" && (
-                                    <Label>
-                                        <Icon src={historyIcon} /> Solicitud Recibida
-                                        <DropBox
-                                            value={formData.solicitudId}
-                                            onChange={handleSolicitudChange}
-                                        >
-                                            <option value="">Seleccione una solicitud</option>
-                                            {solicitudes.map((sol) => (
-                                                <option key={sol.solicitudId} value={sol.solicitudId}>
-                                                    #{sol.solicitudId} - {sol.proveedor?.nombre || 'Proveedor desconocido'}
-                                                </option>
-                                            ))}
-                                        </DropBox>
-                                    </Label>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                        <Label>
+                                            <Icon src={historyIcon} /> Productos Recibidos
+                                            <DropBox
+                                                value={formData.solicitudId}
+                                                onChange={handleSolicitudChange}
+                                            >
+                                                <option value="">Seleccione una solicitud</option>
+                                                {solicitudes.map((sol) => (
+                                                    <option key={sol.solicitudId} value={sol.solicitudId}>
+                                                        #{sol.solicitudId} - {sol.proveedor?.nombre || 'Proveedor desconocido'}
+                                                    </option>
+                                                ))}
+                                            </DropBox>
+                                        </Label>
+                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <Button onClick={registrarDesdeSolicitud}>
+                                                Registrar Productos
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
 
 
-                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5rem' }}>
-                                    <Button onClick={registrarDesdeSolicitud}>
-                                        {formData.tipoMovimiento === "Entrada" ? "Registrar Productos" : "Registrar Salida"}
-                                    </Button>
-                                </div>
+
+
 
                             </Section>
 

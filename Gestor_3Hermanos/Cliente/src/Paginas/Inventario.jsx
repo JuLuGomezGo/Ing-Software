@@ -330,7 +330,7 @@ function GestionInventario() {
                             setProductoEnModal(selectedProduct);
                             openModal("MovStock")
                         }}>
-                            <Icon src={stockIcon} /> Mov. Stock
+                            <Icon src={stockIcon} /> Mov. Productos
                         </Button>
                         <Button onClick={() => navigate('/solicitudProducto')}>
                             <Icon src={historyIcon} /> Solicitudes
