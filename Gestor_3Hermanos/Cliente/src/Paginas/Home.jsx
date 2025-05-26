@@ -47,7 +47,7 @@ const flujoEstados = {
 
 function getEstadosValidos(rol, estadoActual, esLocal) {
  //Si el pedido es de un local, el repartidor no puede cambiar el estado
-  if (rol === "Repartidor" && esLocal) {
+  if (rol === "Repartidor" && esLocal.toLowerCase() === "local") {
     return [];
   }
   const flujo = rol === "Repartidor" ? flujoEstados.repartidor : flujoEstados.general;
@@ -418,6 +418,7 @@ function Home() {
               <img src={estadoIconos[selectedPedido.estado]} alt={selectedPedido.estado} width="20" height="20" />
               {selectedPedido.estado}
             </EstadoBox>
+
             {getEstadosValidos(rolUsuario, selectedPedido.estado, selectedPedido.cliente).map((estado) => (
               <EstadoBox key={estado} onClick={() => updateEstado(estado)}>
                 <img src={estadoIconos[estado]} alt={estado} width="20" height="20" />
