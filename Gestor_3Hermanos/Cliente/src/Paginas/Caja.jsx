@@ -125,7 +125,7 @@ const Caja = () => {
       try {
         const res = await fetch("http://localhost:3000/api/pedidos");
         const result = await res.json();
-        setPedidosPendientes(result.filter(p => p.estado === "Pendiente"));
+        setPedidosPendientes(result.filter(p => p.estado === "Entregado"));
       } catch (e) {
         console.error("Error al obtener pedidos pendientes:", e);
       }
@@ -133,7 +133,7 @@ const Caja = () => {
 
     const fetchSolicitudesPendientes = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/solicitudes?estado=Pendiente");
+        const res = await fetch("http://localhost:3000/api/solicitudes?estado=Recibido");
         const { data } = await res.json();
         setSolicitudesPendientes(data || []);
       } catch (e) {

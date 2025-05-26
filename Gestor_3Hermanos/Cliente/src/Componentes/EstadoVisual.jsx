@@ -7,16 +7,16 @@ import iconEnProceso from "./Iconos/preparandoColor.png";
 import iconListo from "./Iconos/listoColor.png";
 import iconEnCamino from "./Iconos/repartoColor.png";
 import iconEntregado from "./Iconos/entregadoColor.png";
-import iconPagado from "./Iconos/NOpagadoColor.png"; // ✅ Este es el nuevo que debes agregar
+import iconPagado from "./Iconos/NOpagadoColor.png";
 
 
 const estadoColores = {
-  Pendiente: "#fff3cd",
-  "En proceso": "#d1ecf1",
-  "Listo para entrega": "#d4edda",
-  "En camino": "#cfe2ff",
-  Entregado: "#e2f0d9",
-  Pagado: "#e0ffe0"
+  Pendiente: " #FFA500",
+  "En proceso": " #D3D3D3",
+  "Listo para entrega": " #FFD700",
+  "En camino": " #A7C7E7",
+  Entregado: " #28A745",
+  Pagado: " #006400"
 };
 
 const estadoIconos = {
