@@ -156,4 +156,18 @@ router.get('/:id/mapa', async (req, res) => {
   }
 });
 
+// DELETE - Eliminar todos los pedidos
+router.delete('/', async (req, res) => {
+  try {
+    const resultado = await Pedido.deleteMany({});
+    res.json({
+      mensaje: 'Todos los pedidos han sido eliminados',
+      pedidosEliminados: resultado.deletedCount
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar todos los pedidos', detalles: error.message });
+  }
+});
+
+
 export default router;
