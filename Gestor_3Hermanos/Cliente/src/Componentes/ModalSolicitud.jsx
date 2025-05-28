@@ -82,7 +82,7 @@ const ModalSolicitud = ({ solicitud, onClose, onChangeEstado, onCancelar }) => {
                 <Acciones>
                     {estadoActual === "Pendiente" && (
                         <>
-                            <Button variant="primary" onClick={() => onChangeEstado("Enviado")}>📤 Marcar como Enviado</Button>
+                            <Button variant="primary" disabled onClick={() => onChangeEstado("Enviado")}>⏳ Esperando Pago</Button>
                             <Button variant="danger" onClick={onCancelar}>❌ Cancelar</Button>
                         </>
                     )}

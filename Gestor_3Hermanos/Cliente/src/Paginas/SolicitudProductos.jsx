@@ -309,7 +309,7 @@ const GestionSolicitudes = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {solicitudes.map(s => (
+            {[...solicitudes].reverse().map(s => (
               <Tr key={s.solicitudId} onClick={() => handleAbrirSolicitud(s)}>
                 <Td>{s.solicitudId}</Td>
                 <Td>{s.proveedor?.nombre}</Td>

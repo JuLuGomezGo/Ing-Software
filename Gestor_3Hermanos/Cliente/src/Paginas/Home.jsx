@@ -273,7 +273,7 @@ function Home() {
                 </Tr>
               </Thead>
               <Tbody>
-                {pedidos.map((pedido) => (
+                {[...pedidos].reverse().map((pedido) => (
                   <Tr key={pedido.pedidoId}
                     onClick={() => {
                       setSelectedPedido(pedido);
@@ -324,8 +324,8 @@ function Home() {
                         <Th>Costo/Kg</Th>
                       </Tr>
                     </Thead>
-                    <Tbody $scroll={productosFiltrados.length > 4} $rows={4}>
-                      {productosFiltrados.map((prod) => (
+                    <Tbody>
+                      {productosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((prod) => (
                         <Tr key={prod._id} $scroll={productosFiltrados.length > 5}>
                           <Td>{prod.nombre}</Td>
                           <Td>{prod.stock} kg</Td>
