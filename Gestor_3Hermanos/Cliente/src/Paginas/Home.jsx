@@ -46,7 +46,7 @@ const flujoEstados = {
 };
 
 function getEstadosValidos(rol, estadoActual, esLocal) {
- //Si el pedido es de un local, el repartidor no puede cambiar el estado
+  //Si el pedido es de un local, el repartidor no puede cambiar el estado
   if (rol === "Repartidor" && esLocal.toLowerCase() === "local") {
     return [];
   }
@@ -273,20 +273,38 @@ function Home() {
                 </Tr>
               </Thead>
               <Tbody>
-                {[...pedidos].reverse().map((pedido) => (
-                  <Tr key={pedido.pedidoId}
-                    onClick={() => {
-                      setSelectedPedido(pedido);
-                      setShowModal(true);
-                    }}>
-                    <Td>{pedido.pedidoId}</Td>
-                    <Td>{pedido.cliente}</Td>
-                    <EstadoVisual estado={pedido.estado} />
-                    <Td>${pedido.total?.toFixed(2)}</Td>
-                    <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
-                  </Tr>
-                ))}
+                {[...pedidos]
+                  .filter((pedido) => {
+                    
+                    if (rolUsuario === "Repartidor") {
+                      const direccion = (pedido.direccionEntrega || "").toLowerCase().trim();
+                      if (direccion === "local" || direccion.length <= 3) return false;
+
+                      const estado = (pedido.estado || "")
+                        .toLowerCase()
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "");
+                      if (!["en camino", "listo para entrega"].includes(estado)) return false;
+                    }
+
+                    return true;
+                  })
+                  .reverse()
+                  .map((pedido) => (
+                    <Tr key={pedido.pedidoId}
+                      onClick={() => {
+                        setSelectedPedido(pedido);
+                        setShowModal(true);
+                      }}>
+                      <Td>{pedido.pedidoId}</Td>
+                      <Td>{pedido.cliente}</Td>
+                      <EstadoVisual estado={pedido.estado} />
+                      <Td>${pedido.total?.toFixed(2)}</Td>
+                      <Td>{new Date(pedido.fecha).toLocaleDateString()}</Td>
+                    </Tr>
+                  ))}
               </Tbody>
+
             </Table>
           </Tcontainer>
         </TableContainer>
@@ -377,7 +395,7 @@ function Home() {
       </MainLayout>
 
       {showModal && selectedPedido && (
-        
+
         <ModalOverlay>
           <ModalContent>
             <SubTittle stitle="Detalles del Pedido" ancho="completo" icono={detallesIcon} >Detalles del Pedido</SubTittle>

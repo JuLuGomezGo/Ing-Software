@@ -303,7 +303,6 @@ function GestionPedidos() {
                                 >
                                     <option value="Efectivo">Efectivo</option>
                                     <option value="Tarjeta">Tarjeta</option>
-                                    <option value="Transferencia">Transferencia</option>
                                 </DropBox>
                             </div>
 
