@@ -39,6 +39,7 @@ const Container = styled.div`
   flex-direction: column;
   gap: 1rem;
   width: fit-content;
+  height: 120vh;
 `;
 const Label = styled.label`
   font-weight: bold;
@@ -133,7 +134,7 @@ const Caja = () => {
 
     const fetchSolicitudesPendientes = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/solicitudes?estado=Recibido");
+        const res = await fetch("http://localhost:3000/api/solicitudes?estado=Pendiente");
         const { data } = await res.json();
         setSolicitudesPendientes(data || []);
       } catch (e) {
@@ -283,7 +284,7 @@ const Caja = () => {
         await fetch(`http://localhost:3000/api/solicitudes/${id}/estado`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: "Pagado" }),
+          body: JSON.stringify({ estado: "Enviado" }),
         });
         setSolicitudesPendientes((prev) => prev.filter((s) => s.solicitudId !== Number(id)));
         alert("✅ Solicitud Pagada");
@@ -363,7 +364,7 @@ const Caja = () => {
   };
 
   /* ---------- render ---------- */
-   return (
+  return (
     <MainContainer>
       <Header />
       <Container>
@@ -428,32 +429,32 @@ const Caja = () => {
         </StaticTable>
 
         <Button variant="primary" onClick={handleRegister}>💾 Registrar Movimiento</Button>
-        
-        <Tcontainer $scroll={movimientosCaja.length > 7} $rows={7} >
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>ID Pedido</Th><Th>Producto</Th><Th>Motivo</Th><Th>Nombre</Th><Th>Total</Th><Th>Fecha</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {movimientosCaja
-              .filter(m => {
-                const f = new Date(m.fechaHora).toISOString().split("T")[0];
-                return f >= fechaInicio && f <= fechaFin;
-              })
-              .map((mov, i) => (
-                <Tr key={i}>
-                  <Td>{mov.referencia}</Td>
-                  <Td>{mov.producto}</Td>
-                  <Td>{mov.motivo}</Td>
-                  <Td>{mov.nombreProveedorCliente}</Td>
-                  <Td>${mov.monto}</Td>
-                  <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
-                </Tr>
-              ))}
-          </Tbody>
-        </Table>
+
+        <Tcontainer $scroll={movimientosCaja.length > 6} $rows={6} >
+          <Table>
+            <Thead>
+              <Tr>
+                <Th>ID Pedido</Th><Th>Producto</Th><Th>Motivo</Th><Th>Nombre</Th><Th>Total</Th><Th>Fecha</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {movimientosCaja
+                .filter(m => {
+                  const f = new Date(m.fechaHora).toISOString().split("T")[0];
+                  return f >= fechaInicio && f <= fechaFin;
+                })
+                .map((mov, i) => (
+                  <Tr key={i}>
+                    <Td>{mov.referencia}</Td>
+                    <Td>{mov.producto}</Td>
+                    <Td>{mov.motivo}</Td>
+                    <Td>{mov.nombreProveedorCliente}</Td>
+                    <Td>${mov.monto}</Td>
+                    <Td>{new Date(mov.fechaHora).toLocaleString()}</Td>
+                  </Tr>
+                ))}
+            </Tbody>
+          </Table>
         </Tcontainer>
       </Container>
     </MainContainer>

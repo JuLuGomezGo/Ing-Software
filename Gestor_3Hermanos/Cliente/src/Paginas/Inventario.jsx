@@ -57,6 +57,7 @@ const ProductDetailSection = styled.div`
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
+  height: 60vh;
 `;
 
 const ProductInfo = styled.div`
@@ -368,7 +369,7 @@ function GestionInventario() {
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {filteredProducts.map((producto, index) => (
+                            {filteredProducts.sort((a, b) => a.nombre.localeCompare(b.nombre)).map((producto, index) => (
                                 <Tr
                                     key={producto.productoId}
                                     onClick={() => setSelectedProduct(producto)}
@@ -432,7 +433,7 @@ function GestionInventario() {
                                         </Tr>
                                     </Thead>
                                     <Tbody>
-                                        {selectedProduct.historialInventario.map((mov, index) => (
+                                        {[...selectedProduct.historialInventario].reverse().map((mov, index) => (
                                             <Tr key={index}>
                                                 <Td>{new Date(mov.fechaMovimiento).toLocaleString()}</Td>
                                                 <Td>{mov.motivo}</Td>
