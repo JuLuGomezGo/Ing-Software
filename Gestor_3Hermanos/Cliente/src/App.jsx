@@ -13,7 +13,7 @@ import Caja from './Paginas/Caja';
 import GestionUsuarios from './Paginas/GestionUsuarios';
 import GestionProveedores from './Paginas/GestionProveedores';
 import SolicitudProductos from "./Paginas/SolicitudProductos";
-import PedidosRepartidor from './Paginas/PedidosRepartidor';
+// import PedidosRepartidor from './Paginas/PedidosRepartidor';
 import MainContainer from './Componentes/MainContainer';
 
 
@@ -57,7 +57,7 @@ function App() {
           {usuarioLogueado && rolUsuario === "Repartidor" && (
             <>
             <Route path="/home" element={<Home />} />
-            <Route path="/pedidos" element={<PedidosRepartidor />} />
+            {/* <Route path="/pedidos" element={<PedidosRepartidor />} /> */}
             </>
           )}
 
