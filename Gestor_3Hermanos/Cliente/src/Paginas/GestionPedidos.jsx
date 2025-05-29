@@ -236,8 +236,8 @@ function GestionPedidos() {
                                 >
                                     <option value="">Seleccionar producto</option>
                                     {productos.map(producto => (
-                                        <option key={producto.productoId} value={producto.productoId}>
-                                            {producto.nombre} (${producto.precio})
+                                        <option style={{ color: producto.stock <= 0 ? 'red' : 'black' }} key={producto.productoId} value={producto.productoId}>
+                                            {producto.nombre} ({producto.stock<=0 ? "Agotado" : producto.stock + "Kg Disponibles" })
                                         </option>
                                     ))}
                                 </DropBox>
@@ -294,17 +294,6 @@ function GestionPedidos() {
                                 />
                             </div>
 
-                            <div>
-                                <Label>Método de Pago:</Label>
-                                <DropBox
-                                    value={formData.metodoPago}
-                                    onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })}
-                                    disabled={isLoading}
-                                >
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Tarjeta">Tarjeta</option>
-                                </DropBox>
-                            </div>
 
                             <div style={{ gridColumn: 'span 2' }}>
                                 <Label>Dirección de Entrega:</Label>
