@@ -443,16 +443,16 @@ function GestionInventario() {
                                             <Tr key={index}>
                                                 <Td>{new Date(mov.fechaMovimiento).toLocaleString()}</Td>
                                                 <Td>{mov.motivo}</Td>
-                                                <Td style={{ color: mov.motivo === "Venta a Cliente" ? "red" : "green", fontWeight: 600 }}>
+                                                <Td style={{ color: (mov.motivo === "Venta a Cliente" || mov.motivo === "Merma o Perdida") ? "red" : "green", fontWeight: 600 }}>
                                                     {mov.motivo === "Venta a Cliente" ? `-${mov.cantidad}` : `+${mov.cantidad}`} kg
                                                 </Td>
                                                 <Td>{mov.usuarioId}</Td>
                                                 <Td>
                                                     {mov.motivo === "Venta a Cliente" && <div>Pedido# {mov.detalles.pedidoId}</div>}
                                                     {(mov.motivo === "ReStock" || mov.motivo === "Nuevo Producto") && <div>Solicitud# {mov.detalles.solicitudId}</div>}
-                                                    {/* {mov.cliente && <div>👥 {mov.cliente}</div>} */}
+                                                    {mov.motivo === "Merma o Perdida" && <div>{"—"}</div>}
                                                 </Td>
-                                                <Td>{mov.notas || "—"}</Td>
+                                                <Td>{mov.detalles.nota || "—"}</Td>
                                             </Tr>
                                         ))}
                                     </Tbody>

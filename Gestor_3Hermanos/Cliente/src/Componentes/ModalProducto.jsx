@@ -59,10 +59,6 @@ const ModalContent = styled.div` //Contenido del modal
     width: 8px;
   }
 
-  // &::-webkit-scrollbar-track {
-  //   background: #f1f1f1;
-  //   border-radius: 4px;
-  // }
 
   &::-webkit-scrollbar-thumb {
     background:rgb(189, 165, 147);
@@ -133,9 +129,9 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     };
 
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
-
-
     const [solicitudes, setSolicitudes] = useState([]);
+
+
 
     useEffect(() => {
         if (mode === "MovStock") {
@@ -193,6 +189,14 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 solicitudId: "",
                 tipoMovimiento: "Entrada",
                 motivoMovimiento: "ReStock",
+            });
+        } else if (mode === "MovStock" && productoSeleccionado) {
+            setFormData({
+                productoId: productoSeleccionado.productoId,
+                tipoMovimiento: "Salida", // Por defecto
+                motivoMovimiento: "Merma o Perdida",
+                cantidad: "",
+                nota: ""
             });
         }
     }, [productoSeleccionado, showModal, mode]);
@@ -338,11 +342,26 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     ];
     const handleTipoMovimientoChange = (e) => {
         const selectedTipo = e.target.value;
+        const newMotivo = motivosMovimiento[selectedTipo]?.[0]?.value || '';
+
         setFormData({
             ...formData,
             tipoMovimiento: selectedTipo,
             motivoMovimiento: motivosMovimiento[selectedTipo]?.[0]?.value || '',
         });
+
+        const nuevoFormData = {
+            ...formData,
+            tipoMovimiento: selectedTipo,
+            motivoMovimiento: newMotivo,
+        };
+
+        // Si es salida, remover solicitudId
+        if (selectedTipo === "Salida") {
+            delete nuevoFormData.solicitudId;
+        }
+
+        setFormData(nuevoFormData);
     };
 
     const handleMotivoMovimientoChange = (e) => {
@@ -362,6 +381,16 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
         } else {
             setSolicitudSeleccionada(null);
         }
+    };
+
+    const handleProductoChange = (e) => {
+        const selectedProductoId = e.target.value;
+        console.log("Producto seleccionado:", selectedProductoId);
+        setFormData({
+            ...formData,
+            productoId: Number(selectedProductoId), 
+        });
+        console.log(formData);
     };
 
     const registrarDesdeSolicitud = async () => {
@@ -432,6 +461,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
     const registrarSalidaPorMerma = async () => {
         const usuario = JSON.parse(localStorage.getItem("usuario"));
         const usuarioId = usuario?.usuarioId;
+        console.log(formData);
 
         if (!formData.productoId || !formData.cantidad || formData.cantidad <= 0) {
             return toast.error("Seleccione un producto y cantidad válida");
@@ -454,12 +484,14 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                 nota: formData.nota || ""
             }
         };
+        console.log("Movimiento a registrar:", movimiento);
 
         const productoActualizado = {
             productoId: producto.productoId,
             stock: producto.stock - formData.cantidad,
             historialInventario: [...producto.historialInventario, movimiento]
         };
+        console.log("Producto actualizado:", productoActualizado);
 
         await onSave(productoActualizado); // PATCH al producto
         toast.success("Salida registrada correctamente");
@@ -530,7 +562,7 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                                             <Icon src={historyIcon} /> Producto retirado:
                                             <DropBox
                                                 value={formData.productoId}
-                                                onChange={handleSolicitudChange}
+                                                onChange={handleProductoChange}
                                             >
                                                 <option value="">Seleccione producto</option>
                                                 {productosDisponibles.map(p => (
@@ -540,17 +572,27 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                                         </Label>
                                         <Label>
                                             <Icon src={details} /> Cantidad:
-                                            <TextBox defaultValue={0} type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: Number(e.target.value) })} >
+                                            <TextBox defaultValue={0}
+                                                type="number"
+                                                value={formData.cantidad}
+                                                onChange={(e) => setFormData({ ...formData, cantidad: Number(e.target.value) })}
+                                                min={0.1}
+                                            >
 
                                             </TextBox>
                                         </Label>
                                         <Label>Nota:
-                                            <TextArea value={formData.nota}  onChange={(e) => setFormData({ ...formData, nota: e.target.value })}/>
+                                            <TextArea
+                                                name="nota"
+                                                value={formData.nota || ""}
+                                                onChange={(e) => setFormData({ ...formData, nota: e.target.value })}
+                                                placeholder="Ej. Se cayó, vencido, dañado, etc."
+                                            />
                                         </Label>
                                         <div>
-                                        <Button onClick={console.log(formData)}>
-                                            Registrar Salida
-                                        </Button>
+                                            <Button onClick={registrarSalidaPorMerma}>
+                                                Registrar Salida
+                                            </Button>
                                         </div>
 
                                     </div>
