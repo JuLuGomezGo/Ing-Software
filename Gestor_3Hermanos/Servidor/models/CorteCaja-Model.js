@@ -11,12 +11,12 @@ const CorteCajaSchema = new mongoose.Schema({
     required: true
   }
 }, {
-  collection: 'corte_caja', // Nombre de la colección en MongoDB
+  collection: 'corteCaja', 
   timestamps: true // Añade createdAt y updatedAt automáticamente
 });
 
 // Crear el modelo
 const CorteCaja = mongoose.model('CorteCaja', CorteCajaSchema);
 
-// Exportar el modelo
-module.exports = CorteCaja;
+// Exportar el modelo (usando ES Modules)
+export default CorteCaja;

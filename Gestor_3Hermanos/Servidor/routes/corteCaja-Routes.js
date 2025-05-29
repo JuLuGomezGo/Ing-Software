@@ -1,8 +1,8 @@
-import express from 'express'; 
-import router from express.Router();
-import CorteCaja from './CorteCaja-Model';
+import express from 'express';
+import CorteCaja from '../models/CorteCaja-Model.js'; 
+const router = express.Router();
 
-//  Crear un nuevo corte de caja
+// Crear un nuevo corte de caja
 router.post('/', async (req, res) => {
   try {
     const nuevoCorte = new CorteCaja(req.body);
@@ -13,7 +13,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-//  Obtener todos los cortes de caja
+// Obtener todos los cortes de caja
 router.get('/', async (req, res) => {
   try {
     const cortes = await CorteCaja.find().sort({ fecha_corte: -1 });
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-//  Obtener un corte de caja por ID
+// Obtener un corte de caja por ID
 router.get('/:id', async (req, res) => {
   try {
     const corte = await CorteCaja.findById(req.params.id);
@@ -34,7 +34,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-//  Actualizar un corte de caja por ID
+// Actualizar un corte de caja por ID
 router.put('/:id', async (req, res) => {
   try {
     const corteActualizado = await CorteCaja.findByIdAndUpdate(
@@ -49,7 +49,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-//  Eliminar un corte de caja por ID
+// Eliminar un corte de caja por ID
 router.delete('/:id', async (req, res) => {
   try {
     const corteEliminado = await CorteCaja.findByIdAndDelete(req.params.id);
@@ -60,4 +60,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
