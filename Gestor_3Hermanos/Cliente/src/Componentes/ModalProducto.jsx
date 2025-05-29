@@ -50,6 +50,28 @@ const ModalContent = styled.div` //Contenido del modal
   align-items: center;
   text-align: center;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+
+  Max-height: 90vh;
+  overflow-y: auto;
+
+    /* Scrollbar personalizado (WebKit) */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  // &::-webkit-scrollbar-track {
+  //   background: #f1f1f1;
+  //   border-radius: 4px;
+  // }
+
+  &::-webkit-scrollbar-thumb {
+    background:rgb(189, 165, 147);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
 `;
 
 const Section = styled.div`      //Contenedor de Boton de volver
@@ -557,9 +579,6 @@ const ModalProducto = ({ showModal, handleCloseModal, mode, onSave, productoSele
                                         </div>
                                     </div>
                                 )}
-
-
-
 
 
                             </Section>

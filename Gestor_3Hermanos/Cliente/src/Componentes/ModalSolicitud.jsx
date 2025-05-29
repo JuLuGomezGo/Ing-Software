@@ -3,6 +3,9 @@ import React from "react";
 import styled from "styled-components";
 import Button from "./Button";
 import { Table, Tr, Th, Td } from "./Table";
+import { useNavigate } from "react-router-dom";
+import Icon from "./Icon";
+import priceI from "./Iconos/priceIcon.png";
 
 const ModalBackground = styled.div`
   position: fixed;
@@ -44,7 +47,7 @@ const Acciones = styled.div`
 
 const ModalSolicitud = ({ solicitud, onClose, onChangeEstado, onCancelar }) => {
     if (!solicitud) return null;
-
+    const navigate = useNavigate();
     const estadoActual = solicitud.estado;
 
     return (
@@ -82,7 +85,7 @@ const ModalSolicitud = ({ solicitud, onClose, onChangeEstado, onCancelar }) => {
                 <Acciones>
                     {estadoActual === "Pendiente" && (
                         <>
-                            <Button variant="primary" disabled onClick={() => onChangeEstado("Enviado")}>⏳ Esperando Pago</Button>
+                            <Button variant="primary" onClick={() => navigate("/Caja")}><Icon src={priceI}/> Ir a Pagar</Button>
                             <Button variant="danger" onClick={onCancelar}>❌ Cancelar</Button>
                         </>
                     )}

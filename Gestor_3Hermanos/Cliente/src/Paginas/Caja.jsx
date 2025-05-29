@@ -518,7 +518,7 @@ const Caja = () => {
               {movimientosCaja
                 .filter(m => {
                   const f = new Date(m.fechaHora).toISOString().split("T")[0];
-                  return f >= fechaInicio && f <= fechaFin;
+                  return f >= fechaFin && f <= fechaInicio;
                 })
                 .map((mov, i) => (
                   <Tr key={i}>
