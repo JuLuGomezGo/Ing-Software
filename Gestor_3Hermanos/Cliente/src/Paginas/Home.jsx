@@ -490,15 +490,6 @@ function Home() {
                     </Tr>
                   </Table>
                 </Tcontainer>
-                <p><strong>Método de Pago:</strong></p>
-                <Label>
-                  <input type="radio" name="metodoPago" value="Efectivo" checked />
-                  Efectivo
-                </Label>
-                <Label>
-                  <input type="radio" name="metodoPago" value="Tarjeta" />
-                  Tarjeta
-                </Label>
 
                 <Botonera>
                   <Button onClick={() => setShowEstadoModal(true)}>Cambiar Estado</Button>
