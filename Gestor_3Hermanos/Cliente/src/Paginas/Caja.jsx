@@ -386,7 +386,7 @@ const Caja = () => {
         dinero_total: saldoActual
       };
 
-      const resCorte = await fetch("http://localhost:3000/api/cortecaja", {
+      const resCorte = await fetch("http://localhost:3000/api/cortes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(corteData)
@@ -446,7 +446,7 @@ const Caja = () => {
           </Button>
         </div>
         <SidebarButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          ☰ Corte de Caja
+          ☰ Reporte Financiero.
         </SidebarButton>
         <Sidebar isOpen={isSidebarOpen}>
           <Cont_lbl>
