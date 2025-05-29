@@ -112,7 +112,7 @@ function Login() {
 
         // Redirigir según el rol
         if (data.data.rol === 'Repartidor') {
-          navigate('/pedidos'); // Ruta para el repartidor
+          navigate('/'); // Ruta para el repartidor
         } else {
           navigate('/Home'); // Ruta normal
         }

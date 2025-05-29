@@ -175,6 +175,48 @@ router.post('/:id/caja', async (req, res) => {
       });
   }
 });
+//borrar caja
+// Endpoint para borrar todo el array de caja de un usuario
+router.delete('/:id/caja', async (req, res) => {
+  try {
+    const usuarioId = req.params.id;
+
+    // Verificar si el usuario existe
+    const usuarioExistente = await Usuario.findById(usuarioId);
+    if (!usuarioExistente) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Usuario no encontrado' 
+      });
+    }
+
+    // Actualizar el usuario, estableciendo el array caja a vacío
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(
+      usuarioId,
+      { $set: { caja: [] } }, // Esto vaciará completamente el array
+      { new: true, runValidators: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Todos los movimientos de caja han sido eliminados',
+      data: {
+        usuarioId: usuarioActualizado._id,
+        nombre: usuarioActualizado.nombre,
+        movimientosEliminados: usuarioExistente.caja.length,
+        cajaActual: usuarioActualizado.caja // Debería ser un array vacío []
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al borrar movimientos de caja:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error al borrar los movimientos de caja',
+      detalles: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 
 
 // Eliminar usuario
