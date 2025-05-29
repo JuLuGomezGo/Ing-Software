@@ -15,6 +15,7 @@ import pricelcon from "../Componentes/Iconos/priceIcon.png";
 import nuevoPedido from "../Componentes/Iconos/nuevoPedido.png";
 import iconSearch from "../Componentes/Iconos/buscar.png";
 import detallesIcon from "../Componentes/Iconos/details.png";
+import IconMap from "../Componentes/Iconos/map.png"; // Ícono de Google Maps
 
 import iconPendiente from "../Componentes/Iconos/pendienteColor.png";
 import iconEnProceso from "../Componentes/Iconos/preparandoColor.png";
@@ -47,7 +48,7 @@ const flujoEstados = {
 
 function getEstadosValidos(rol, estadoActual, esLocal) {
   //Si el pedido es de un local, el repartidor no puede cambiar el estado
-  if (rol === "Repartidor" && esLocal.toLowerCase() === "local") {
+  if (rol !== "Repartidor" && esLocal.toLowerCase() !== "local" && estadoActual === "Listo para entrega") {
     return [];
   }
   const flujo = rol === "Repartidor" ? flujoEstados.repartidor : flujoEstados.general;
@@ -57,7 +58,13 @@ function getEstadosValidos(rol, estadoActual, esLocal) {
 
 
 // ---------- ESTILOS ----------
-
+const Label = styled.label`
+  font-weight: bold;
+  color: #5d4037;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
 const MainLayout = styled.div`
   // align-items: center;
   justify-content: center;
@@ -122,9 +129,31 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   background: #fff;
+  max-height: 80vh;
+  overflow-y: auto;
   padding: 20px;
-  // width: 400px;
-  border-radius: 10px;
+  border-radius: 20px 10px 10px 20px;
+  padding;: 20px;
+
+  /* Scrollbar personalizado (WebKit) */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  // &::-webkit-scrollbar-track {
+  //   background: #f1f1f1;
+  //   border-radius: 4px;
+  // }
+
+  &::-webkit-scrollbar-thumb {
+    background:rgb(189, 165, 147);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+
 `;
 
 const EstadoBox = styled.div`
@@ -216,10 +245,22 @@ function Home() {
         }
       });
 
-    fetch("http://localhost:3000/api/Pedidos")
-      .then(res => res.json())
-      .then(setPedidos);
+    const fetchPedidos = () => {
+      fetch("http://localhost:3000/api/Pedidos")
+        .then(res => res.json())
+        .then(setPedidos);
+    };
+    fetchPedidos();
+    const interval = setInterval(() => {
+      fetchPedidos();
+    }, 5000); // cada 10 segundos
+
+    // Limpieza del intervalo al desmontar
+    return () => clearInterval(interval);
+
   }, []);
+
+
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -275,7 +316,7 @@ function Home() {
               <Tbody>
                 {[...pedidos]
                   .filter((pedido) => {
-                    
+
                     if (rolUsuario === "Repartidor") {
                       const direccion = (pedido.direccionEntrega || "").toLowerCase().trim();
                       if (direccion === "local" || direccion.length <= 3) return false;
@@ -396,33 +437,106 @@ function Home() {
 
       {showModal && selectedPedido && (
 
+
+
         <ModalOverlay>
-          <ModalContent>
-            <SubTittle stitle="Detalles del Pedido" ancho="completo" icono={detallesIcon} >Detalles del Pedido</SubTittle>
-            <p><strong>Pedido ID:</strong> {selectedPedido.pedidoId}</p>
-            <p><strong>Estado:</strong> {selectedPedido.estado}</p>
-            <p><strong>Fecha:</strong> {new Date(selectedPedido.fecha).toLocaleString()}</p>
-            <p><strong>Cliente:</strong> {selectedPedido.cliente}</p>
-            <p><strong>Dirección de Entrega:</strong> {selectedPedido.direccionEntrega}</p>
-            <p><strong>Método de Pago:</strong> {selectedPedido.metodoPago}</p>
-            <p><strong>Total:</strong> ${selectedPedido.total}</p>
-            <h4>Productos en el Pedido</h4>
-            {selectedPedido.productos?.length > 0 ? (
-              <ul>
-                {selectedPedido.productos.map((prod, idx) => (
-                  <li key={idx}>
-                    <strong>{prod.nombre}</strong> (Cantidad: {prod.cantidad}, Precio Unit.: ${prod.precioUnitario})
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No hay productos</p>
-            )}
-            <Botonera>
-              <Button onClick={() => setShowEstadoModal(true)}>Cambiar Estado</Button>
-              <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
-            </Botonera>
-          </ModalContent>
+          {showModal && rolUsuario === "Repartidor" ? (
+            <>
+              <ModalContent>
+                <SubTittle stitle="Detalles del Pedido" ancho="completo" icono={detallesIcon} >Detalles del Pedido</SubTittle>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <p><strong>No. Pedido:</strong> {selectedPedido.pedidoId}</p>
+                  <p><strong>Entregar:</strong> {new Date(selectedPedido.fecha).toLocaleString('es-MX', {
+                    dateStyle: 'medium'
+                  })}</p>
+                </div>
+                <p><strong>Estado:</strong> {selectedPedido.estado}</p>
+                <p><strong>Dirección:</strong> {selectedPedido.direccionEntrega}
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      selectedPedido.direccion
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img src={IconMap} alt="Abrir en Google Maps" className="map-icon" />
+                  </a>
+                </p>
+                <p><strong>Cliente:</strong> {selectedPedido.cliente}</p>
+                <SubTittle stitle="Productos" Icon icono={productoIcon} />
+                <Tcontainer>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>Producto</Th>
+                        <Th>Cantidad (Kg)</Th>
+                        <Th>Costo/Kg</Th>
+                        <Th>Subtotal</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {selectedPedido.productos?.sort((a, b) => a.producto?.nombre.localeCompare(b.producto?.nombre)).map((p, i) => (
+                        <Tr key={i}>
+                          <Td>{p.nombre || "—"}</Td>
+                          <Td>{p.cantidad} Kg</Td>
+                          <Td>${p.precioUnitario}</Td>
+                          <Td>${p.cantidad * p.precioUnitario}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                    <Tr>
+                      <Td colSpan="3" style={{ textAlign: "right", fontWeight: "bold" }}>Total:</Td>
+                      <Td>${selectedPedido.total}</Td>
+                    </Tr>
+                  </Table>
+                </Tcontainer>
+                <p><strong>Método de Pago:</strong></p>
+                <Label>
+                  <input type="radio" name="metodoPago" value="Efectivo" checked />
+                  Efectivo
+                </Label>
+                <Label>
+                  <input type="radio" name="metodoPago" value="Tarjeta" />
+                  Tarjeta
+                </Label>
+
+                <Botonera>
+                  <Button onClick={() => setShowEstadoModal(true)}>Cambiar Estado</Button>
+                  <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
+                </Botonera>
+              </ModalContent>
+            </>
+          ) : (
+            <>
+
+              <ModalContent>
+                <SubTittle stitle="Detalles del Pedido" ancho="completo" icono={detallesIcon} >Detalles del Pedido</SubTittle>
+                <p><strong>Pedido ID:</strong> {selectedPedido.pedidoId}</p>
+                <p><strong>Estado:</strong> {selectedPedido.estado}</p>
+                <p><strong>Fecha:</strong> {new Date(selectedPedido.fecha).toLocaleString()}</p>
+                <p><strong>Cliente:</strong> {selectedPedido.cliente}</p>
+                <p><strong>Dirección de Entrega:</strong> {selectedPedido.direccionEntrega}</p>
+                <p><strong>Método de Pago:</strong> {selectedPedido.metodoPago}</p>
+                <p><strong>Total:</strong> ${selectedPedido.total}</p>
+                <h4>Productos en el Pedido</h4>
+                {selectedPedido.productos?.length > 0 ? (
+                  <ul>
+                    {selectedPedido.productos.map((prod, idx) => (
+                      <li key={idx}>
+                        <strong>{prod.nombre}</strong> (Cantidad: {prod.cantidad}, Precio Unit.: ${prod.precioUnitario})
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No hay productos</p>
+                )}
+                <Botonera>
+                  <Button onClick={() => setShowEstadoModal(true)}>Cambiar Estado</Button>
+                  <Button variant="secondary" onClick={handleCloseModal}>Cerrar</Button>
+                </Botonera>
+              </ModalContent>
+            </>
+          )}
         </ModalOverlay>
       )}
 

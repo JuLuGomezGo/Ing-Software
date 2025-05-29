@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
 
@@ -57,7 +57,7 @@ const ProductDetailSection = styled.div`
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-  height: 60vh;
+  height: 65vh;
 `;
 
 const ProductInfo = styled.div`
@@ -77,6 +77,7 @@ const MovementHistory = styled.div`
   margin: 0;
   border-radius: 8px;
   border: 1px solid #a96e3b;
+  hi
 `;
 
 const ActionButtons = styled.div`
@@ -311,6 +312,7 @@ function GestionInventario() {
 
             <Header />
             <InventarioContainer>
+                <ToastContainer position="top-right" autoClose={3000} />
                 <HeaderSection>
                     <SubTitle stitle="Gestión de Inventario" />
 
@@ -325,12 +327,12 @@ function GestionInventario() {
                     </SearchBar>
 
                     <FilterSection>
-                        
-                        <Button size="medium" variant="secondary" 
-                        onClick={() => {
-                            setProductoEnModal(selectedProduct);
-                            openModal("MovStock")
-                        }}>
+
+                        <Button size="medium" variant="secondary"
+                            onClick={() => {
+                                setProductoEnModal(selectedProduct);
+                                openModal("MovStock")
+                            }}>
                             <Icon src={stockIcon} /> Mov. Productos
                         </Button>
                         <Button onClick={() => navigate('/solicitudProducto')}>
@@ -358,7 +360,7 @@ function GestionInventario() {
                     </FilterSection>
                 </HeaderSection>
 
-                <Tcontainer $scroll={filteredProducts.length > 6} $rows={6}>
+                <Tcontainer $scroll={filteredProducts.length > 5} $rows={5}>
                     <Table >
                         <Thead>
                             <Tr>
@@ -407,8 +409,12 @@ function GestionInventario() {
                                     <Icon src={editIcon} /> Editar
                                 </Button>
                                 <Button size="medium" variant="danger" onClick={() => {
-                                    if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
-                                        handleDeleteProducto(selectedProduct.productoId);
+                                    if (selectedProduct.stock === 0) {
+                                        if (window.confirm(`¿Está seguro de eliminar el producto ${selectedProduct.nombre}?`)) {
+                                            handleDeleteProducto(selectedProduct.productoId);
+                                        }
+                                    } else {
+                                        toast.error("No se puede eliminar un producto con stock");
                                     }
                                 }}>
                                     <Icon src={deleteIcon} /> Eliminar
@@ -419,8 +425,8 @@ function GestionInventario() {
                         <MovementHistory>
                             <h3>📊 Historial de Movimientos</h3>
                             <Tcontainer style={{ paddingLeft: "15px" }}
-                                $scroll={selectedProduct.historialInventario.length > 5}
-                                $rows={5}>
+                                $scroll={selectedProduct.historialInventario.length > 4}
+                                $rows={4}>
                                 <Table>
                                     <Thead>
                                         <Tr>

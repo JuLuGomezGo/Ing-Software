@@ -89,6 +89,7 @@ const Caja = () => {
   const [movimientosCaja, setMovimientosCaja] = useState([]);
   const [detallesPedido, setDetallesPedido] = useState(null);
   const [showDetalles, setShowDetalles] = useState(false);
+  const [saldoActual, setSaldoActual] = useState(0);
 
   const [formData, setFormData] = useState({
     pedidoId: "",
@@ -165,6 +166,19 @@ const Caja = () => {
     };
     fetchCajaMovimientos();
   }, []);
+
+  /* ------- Calcular saldo actual -------- */
+  useEffect(() => {
+    // Calcula el saldo sumando entradas y restando salidas
+    const saldo = movimientosCaja.reduce((total, mov) => {
+      if (mov.motivo === "Cobro Pedido") {
+        return total + mov.monto;
+      } else {
+        return total - mov.monto;
+      }
+    }, 0);
+    setSaldoActual(saldo);
+  }, [movimientosCaja]);
 
   /* ---------- handlers ---------- */
   const obtenerDatosPedido = async () => {
@@ -363,11 +377,74 @@ const Caja = () => {
     doc.save(`Reporte_${fechaInicio}_al_${fechaFin}.pdf`);
   };
 
+  /* ---------- Función de corte ---------- */
+  const handleCorte = async () => {
+    try {
+      // 1. Registrar el corte de caja
+      const corteData = {
+        fecha_corte: new Date(),
+        dinero_total: saldoActual
+      };
+
+      const resCorte = await fetch("http://localhost:3000/api/cortecaja", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corteData)
+      });
+
+      if (!resCorte.ok) throw new Error("Error al registrar corte de caja");
+
+      // 2. Eliminar pedidos pendientes
+      const resPedidos = await fetch("http://localhost:3000/api/pedidos", {
+        method: "DELETE"
+      });
+      
+      if (!resPedidos.ok) throw new Error("Error al eliminar pedidos");
+      
+      // 3. Actualizar estado local
+      setPedidosPendientes([]);
+      
+      // 4. Mostrar mensaje de éxito con detalles
+      alert(`✅ Corte realizado exitosamente
+      📅 Fecha: ${new Date().toLocaleString()}
+      💰 Saldo final: $${saldoActual.toFixed(2)}`);
+
+    } catch (error) {
+      console.error("Error al realizar corte:", error);
+      alert("❌ Error al realizar el corte");
+    }
+  };
+
   /* ---------- render ---------- */
   return (
     <MainContainer>
       <Header />
       <Container>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          gap: '1rem',
+          position: 'fixed',
+          top: '145px',
+          right: '45px',
+          zIndex: 1000,
+          background: '#f9f4ee',
+          padding: '0.5rem',
+          borderRadius: '20px',
+          border: '2px solid #b3815d'
+        }}>
+          <Label>💰 Saldo: ${saldoActual.toFixed(2)}</Label>
+          <Button 
+            onClick={handleCorte}
+            style={{
+              background: '#4CAF50',
+              color: 'white'
+            }}
+          >
+            ✂️ Corte
+          </Button>
+        </div>
         <SidebarButton onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
           ☰ Corte de Caja
         </SidebarButton>
@@ -441,7 +518,7 @@ const Caja = () => {
               {movimientosCaja
                 .filter(m => {
                   const f = new Date(m.fechaHora).toISOString().split("T")[0];
-                  return f >= fechaInicio && f <= fechaFin;
+                  return f >= fechaFin && f <= fechaInicio;
                 })
                 .map((mov, i) => (
                   <Tr key={i}>
